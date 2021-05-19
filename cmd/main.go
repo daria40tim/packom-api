@@ -1,10 +1,13 @@
 package main
 
 import (
+	"os"
+
 	"github.com/daria40tim/packom"
 	"github.com/daria40tim/packom/pkg/handler"
 	"github.com/daria40tim/packom/pkg/repository"
 	"github.com/daria40tim/packom/pkg/service"
+	"github.com/joho/godotenv"
 	_ "github.com/lib/pq"
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/viper"
@@ -18,11 +21,15 @@ func main() {
 		logrus.Fatalf("error initializing configs: %s", err.Error())
 	}
 
+	if err := godotenv.Load(); err != nil {
+		logrus.Fatalf("error loading env vars: %s", err.Error())
+	}
+
 	db, err := repository.NewPostgresDB(repository.Config{
 		Host:     "localhost",
 		Port:     "5432",
 		Username: "postgres",
-		Password: "5770",
+		Password: os.Getenv("DB_PASSWORD"),
 		DBName:   "postgres",
 		SSLMode:  "disable",
 	})

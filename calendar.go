@@ -1,10 +1,10 @@
 package packom
 
 type Calendar struct {
-	Cal_id int    `json:"cal_id"`
-	Name   string `json:"name"`
-	Period int    `json:"period"`
-	Term   int    `json:"term"`
-	Tz_id  int    `json:"tz_id"`
-	Cp_id  int    `json:"cp_id"`
+	Cal_id int    `json:"cal_id" db:"cal_id"`
+	Name   string `json:"name" db:"name"`
+	Period int    `json:"period" db:"period"`
+	Term   int    `json:"term" db:"term"`
+	Tz_id  int    `json:"tz_id" db:"tz_id"`
+	Cp_id  int    `json:"cp_id" db:"cp_id"`
 }

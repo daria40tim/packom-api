@@ -11,17 +11,27 @@ type Autherization interface {
 }
 
 type Org interface {
+	GetAll(O_Id int /*, filter packom.TechFilter*/) ([]packom.OrgAll, error)
+	GetById(O_Id, o_id int) (packom.OrgId, error)
+	UpdateById(O_Id int, input packom.OrgI) (int, error)
+	AddById(O_Id int, input int) (int, error)
 }
 
 type CP interface {
 	Create(O_Id int, cp packom.CP) (int, error)
+	GetAll(O_Id int /*, filter packom.TechFilter*/) ([]packom.CPAll, error)
+	GetById(O_Id, cp_id int) (packom.CP, error)
 }
 
 type Tender interface {
+	Create(O_Id int, tender packom.Tender) (int, error)
+	GetAll(O_Id int /*, filter packom.TechFilter*/) ([]packom.TenderAll, error)
 }
 
 type Tech interface {
 	Create(O_Id int, tech packom.Tech) (int, error)
+	GetAll(O_Id int) ([]packom.TechAll, []packom.CP_srv, error)
+	GetById(O_Id, tz_id int) (packom.Tech, []packom.Cost, []packom.Calendar, error)
 }
 
 type Repository struct {
@@ -37,5 +47,7 @@ func NewRepository(db *sqlx.DB) *Repository {
 		Autherization: NewAuthPostgres(db),
 		Tech:          NewTechPostgres(db),
 		CP:            NewCPPostgres(db),
+		Tender:        NewTenderPostgres(db),
+		Org:           NewOrgPostgres(db),
 	}
 }

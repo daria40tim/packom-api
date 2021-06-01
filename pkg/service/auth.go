@@ -35,10 +35,10 @@ func (s *AuthService) CreateOrg(org packom.Org) (int, error) {
 	return s.repo.CreateOrg(org)
 }
 
-func (s *AuthService) GenerateToken(login, pwd string) (string, error) {
+func (s *AuthService) GenerateToken(login, pwd string) (string, error, packom.Org) {
 	org, err := s.repo.GetOrg(login, generatePasswordHash(pwd))
 	if err != nil {
-		return "", err
+		return "", err, org
 	}
 
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, &tokenClaims{
@@ -48,7 +48,9 @@ func (s *AuthService) GenerateToken(login, pwd string) (string, error) {
 		},
 		org.O_id})
 
-	return token.SignedString([]byte(signinKey))
+	h, error := token.SignedString([]byte(signinKey))
+
+	return h, error, org
 }
 
 func (s *AuthService) ParseToken(accessToken string) (int, error) {

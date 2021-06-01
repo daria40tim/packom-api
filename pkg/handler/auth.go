@@ -10,6 +10,11 @@ import (
 func (h *Handler) signUp(c *gin.Context) {
 	var input packom.Org
 
+	if c.Request.Method == "OPTIONS" {
+		c.AbortWithStatus(204)
+		return
+	}
+
 	if err := c.BindJSON(&input); err != nil {
 		newErrorResponse(c, http.StatusBadRequest, err.Error())
 		return
@@ -28,8 +33,8 @@ func (h *Handler) signUp(c *gin.Context) {
 }
 
 type signInInput struct {
-	Login string `json:"login"`
-	Pwd   string `json:"pwd"`
+	Login string `json:"email"`
+	Pwd   string `json:"password"`
 }
 
 func (h *Handler) signIn(c *gin.Context) {
@@ -40,7 +45,7 @@ func (h *Handler) signIn(c *gin.Context) {
 		return
 	}
 
-	token, err := h.services.Authorization.GenerateToken(input.Login, input.Pwd)
+	token, err, org := h.services.Authorization.GenerateToken(input.Login, input.Pwd)
 	if err != nil {
 		newErrorResponse(c, http.StatusInternalServerError, err.Error())
 		return
@@ -48,6 +53,7 @@ func (h *Handler) signIn(c *gin.Context) {
 
 	c.JSON(http.StatusOK, map[string]interface{}{
 		"token": token,
+		"o_id":  org.O_id,
 	})
 
 }

@@ -127,3 +127,72 @@ func (r *TechPostgres) Create(O_Id int, tech packom.Tech) (int, error) {
 
 	return Tz_Id, nil
 }
+
+func (r *TechPostgres) GetAll(O_Id int) ([]packom.TechAll, []packom.CP_srv, error) {
+	var cps []packom.CP_srv
+
+	query := `SELECT cp_id, date, tz_id, o_id, end_date
+	FROM public."CP" where o_id=$1`
+
+	err := r.db.Select(&cps, query, O_Id)
+	if err != nil {
+		return nil, nil, err
+	}
+
+	var techs []packom.TechAll
+
+	query = `SELECT distinct public."Techs".date,  public."Techs".task_name as task,public."Techs".end_date, public."Orgs".name as client, public."Techs".o_id, public."Techs".tz_id,  public."Techs".end_date, 
+	public."Techs".proj, public."Pack_groups".name as group, public."Pack_types".name as type, public."Pack_kinds".name as kind, 
+	count(cp_id) over (partition by public."Techs".tz_id) as cp_count
+	FROM public."Techs" join public."Orgs" on public."Techs".o_id=public."Orgs".o_id 
+	join public."Pack_groups" on public."Pack_groups".group_id=public."Techs".group_id 
+	join public."Pack_types" on public."Pack_types".type_id=public."Techs".type_id 
+	join public."Pack_kinds" on public."Pack_kinds".kind_id=public."Techs".kind_id 
+	left join public."CP" on public."CP".tz_id=public."Techs".tz_id `
+
+	err = r.db.Select(&techs, query)
+
+	return techs, cps, err
+}
+
+func (r *TechPostgres) GetById(O_Id, tz_id int) (packom.Tech, []packom.Cost, []packom.Calendar, error) {
+	var costs []packom.Cost
+	var tech packom.Tech
+	var calendars []packom.Calendar
+
+	query := `SELECT cost_id, public."Metrics".name as metr, count, tz_id, 0 as cp_id, 0 as ppu, info, public."Tasks".name as task
+	FROM public."Costs"
+	join public."Metrics" on public."Metrics".metr_id = public."Costs".metr_id
+	join public."Tasks" on public."Tasks".task_id = public."Costs".task_id
+	where tz_id = $1`
+
+	err := r.db.Select(&costs, query, tz_id)
+	if err != nil {
+		return tech, nil, nil, err
+	}
+
+	query = `SELECT cal_id, public."Task_names".name as name, period, term, tz_id, 0 as cp_id
+	FROM public."Calendar"
+	join public."Task_names" on public."Task_names".name_id = public."Calendar".name_id
+	where tz_id = $1`
+
+	err = r.db.Select(&calendars, query, tz_id)
+	if err != nil {
+		return tech, nil, nil, err
+	}
+
+	query = `SELECT public."Techs".date, public."Techs".o_id, public."Pack_groups".name as group, public."Pack_kinds".name as kind, 
+	public."Pack_types".name as type, public."Orgs".name as client, public."Techs".end_date, public."Techs".proj, public."Pay_conds".name as pay_cond,
+	tender_st, cp_st, private, public."Techs".info, public."Techs".history, public."Techs".tz_st, public."Techs".tz_id
+		FROM public."Techs"
+		join public."Orgs" on public."Orgs".o_id = public."Techs".o_id
+		join public."Pack_groups" on public."Pack_groups".group_id = public."Techs".group_id
+		join public."Pack_kinds" on public."Pack_kinds".kind_id = public."Techs".kind_id
+		join public."Pack_types" on public."Pack_types".type_id = public."Techs".type_id
+		join public."Pay_conds" on public."Pay_conds".pay_cond_id = public."Techs".type_id
+		where tz_id = $1`
+
+	err = r.db.Get(&tech, query, tz_id)
+
+	return tech, costs, calendars, err
+}

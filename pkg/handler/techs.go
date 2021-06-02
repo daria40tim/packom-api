@@ -32,8 +32,7 @@ func (h *Handler) createTech(c *gin.Context) {
 }
 
 type getAllTechsResponse struct {
-	Data []packom.TechAll `json:"data"`
-	CPS  []packom.CP_srv  `json:"cps"`
+	Data packom.TechAllCP `json:"data"`
 }
 
 func (h *Handler) getAllTechs(c *gin.Context) {
@@ -43,7 +42,7 @@ func (h *Handler) getAllTechs(c *gin.Context) {
 		return
 	}
 
-	techs, cps, err := h.services.Tech.GetAll(O_Id /*, input*/)
+	techs, err := h.services.Tech.GetAll(O_Id /*, input*/)
 	if err != nil {
 		newErrorResponse(c, http.StatusInternalServerError, err.Error())
 		return
@@ -51,7 +50,6 @@ func (h *Handler) getAllTechs(c *gin.Context) {
 
 	c.JSON(http.StatusOK, getAllTechsResponse{
 		Data: techs,
-		CPS:  cps,
 	})
 
 }
@@ -80,5 +78,97 @@ func (h *Handler) getTechById(c *gin.Context) {
 }
 
 func (h *Handler) updateTechById(c *gin.Context) {
+
+	var input packom.Tech
+	if err := c.BindJSON(&input); err != nil {
+		newErrorResponse(c, http.StatusBadRequest, err.Error())
+		return
+	}
+
+	id, err := strconv.Atoi(c.Param("id"))
+	if err != nil {
+		newErrorResponse(c, http.StatusBadRequest, "invalid id param")
+		return
+	}
+
+	tz_id, err := h.services.Tech.UpdateById(id, input)
+	if err != nil {
+		newErrorResponse(c, http.StatusInternalServerError, err.Error())
+		return
+	}
+	c.JSON(http.StatusOK, map[string]interface{}{
+		"tz_id": tz_id,
+	})
+}
+
+type getSelectResponse struct {
+	Data packom.Select `json:"data"`
+}
+
+func (h *Handler) getSelect(c *gin.Context) {
+
+	data, err := h.services.Tech.SelectAll()
+	if err != nil {
+		newErrorResponse(c, http.StatusInternalServerError, err.Error())
+		return
+	}
+
+	c.JSON(http.StatusOK, getSelectResponse{
+		Data: data,
+	})
+
+}
+
+type delCal struct {
+	Tz_id string `json:"tz_id"`
+	Task  string `json:"task_name"`
+}
+
+func (h *Handler) deleteCal(c *gin.Context) {
+	var input delCal
+	if err := c.BindJSON(&input); err != nil {
+		newErrorResponse(c, http.StatusBadRequest, err.Error())
+		return
+	}
+
+	a, err := strconv.Atoi(input.Tz_id)
+	if err != nil {
+		newErrorResponse(c, http.StatusBadRequest, err.Error())
+		return
+	}
+
+	data, err := h.services.Tech.DeleteCal(a, input.Task)
+	if err != nil {
+		newErrorResponse(c, http.StatusInternalServerError, err.Error())
+		return
+	}
+
+	c.JSON(http.StatusOK, data)
+}
+
+type delCst struct {
+	Tz_id string `json:"tz_id"`
+	Task  string `json:"task"`
+}
+
+func (h *Handler) deleteCst(c *gin.Context) {
+
+	var input delCst
+	if err := c.BindJSON(&input); err != nil {
+		newErrorResponse(c, http.StatusBadRequest, err.Error())
+		return
+	}
+	a, err := strconv.Atoi(input.Tz_id)
+	if err != nil {
+		newErrorResponse(c, http.StatusBadRequest, err.Error())
+		return
+	}
+	data, err := h.services.Tech.DeleteCost(a, input.Task)
+	if err != nil {
+		newErrorResponse(c, http.StatusInternalServerError, err.Error())
+		return
+	}
+
+	c.JSON(http.StatusOK, data)
 
 }

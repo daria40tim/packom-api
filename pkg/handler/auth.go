@@ -52,8 +52,10 @@ func (h *Handler) signIn(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusOK, map[string]interface{}{
-		"token": token,
-		"o_id":  org.O_id,
+		"token":    token,
+		"o_id":     org.O_id,
+		"group_id": org.Group,
+		"name":     org.Name,
 	})
 
 }

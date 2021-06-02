@@ -5,6 +5,7 @@ type Tech struct {
 	O_id      int        `json:"o_id" db:"o_id"`
 	Date      string     `json:"date" db:"date"`
 	Proj      string     `json:"proj" db:"proj"`
+	Task      string     `json:"task" db:"task_name"`
 	Client    string     `json:"client" db:"client"`
 	End_date  string     `json:"end_date" db:"end_date"`
 	Group     string     `json:"group" db:"group"`
@@ -14,11 +15,12 @@ type Tech struct {
 	Tender_st int        `json:"tender_st" db:"tender_st"`
 	Cp_st     int        `json:"cp_st" db:"cp_st"`
 	Pay_cond  string     `json:"pay_cond" db:"pay_cond"`
-	Private   bool       `json:"private" db:"private"`
+	Private   string     `json:"privacy" db:"private"`
 	Info      string     `json:"info" db:"info"`
 	History   string     `json:"history" db:"history"`
-	Costs     []Cost     `json:"costs"`
-	Calendars []Calendar `json:"calendars"`
+	Costs     []Cost     `json:"cst"`
+	Calendars []Calendar `json:"cal"`
+	Docs      []string   `json:"docs"`
 }
 
 type TechAll struct {
@@ -36,4 +38,19 @@ type TechAll struct {
 	Tender_st string `json:"tender_st" db:"tender_st"`
 	CP_count  int    `json:"count" db:"cp_count"`
 	CP_st     string `json:"cp_st" db:"cp_st"`
+}
+
+type TechAllCP struct {
+	Techs []TechAll `json:"techs"`
+	Cps   []CP_srv  `json:"cps"`
+}
+
+type Select struct {
+	Metrics    []string `json:"metrics"`
+	Groups     []string `json:"groups"`
+	Kinds      []string `json:"kinds"`
+	Types      []string `json:"types"`
+	Pay_conds  []string `json:"pay_conds"`
+	Task_names []string `json:"task_names"`
+	Tasks      []string `json:"tasks"`
 }

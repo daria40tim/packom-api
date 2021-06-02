@@ -9,4 +9,5 @@ type Cost struct {
 	Cp_id   int    `json:"cp_id" db:"cp_id"`
 	PPU     string `json:"ppu" db:"ppu"`
 	Info    string `json:"info" db:"info"`
+	Active  bool   `json:"active" db:"active"`
 }

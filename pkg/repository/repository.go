@@ -30,8 +30,12 @@ type Tender interface {
 
 type Tech interface {
 	Create(O_Id int, tech packom.Tech) (int, error)
-	GetAll(O_Id int) ([]packom.TechAll, []packom.CP_srv, error)
+	GetAll(O_Id int) (packom.TechAllCP, error)
 	GetById(O_Id, tz_id int) (packom.Tech, []packom.Cost, []packom.Calendar, error)
+	SelectAll() (packom.Select, error)
+	DeleteCost(tz_id int, task string) (int, error)
+	DeleteCal(tz_id int, task string) (int, error)
+	UpdateById(id int, input packom.Tech) (int, error)
 }
 
 type Repository struct {

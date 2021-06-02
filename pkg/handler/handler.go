@@ -72,6 +72,9 @@ func (h *Handler) InitRoutes() *gin.Engine {
 			techs.GET("/", h.getAllTechs)
 			techs.GET("/:id", h.getTechById)
 			techs.PUT("/:id", h.updateTechById)
+			techs.GET("/select", h.getSelect)
+			techs.POST("/delete_cal", h.deleteCal)
+			techs.POST("/delete_cst", h.deleteCst)
 		}
 		cps := api.Group("/cps")
 		{

@@ -41,7 +41,7 @@ func (r *AuthPostgres) CreateOrg(org packom.Org) (int, error) {
 
 func (r *AuthPostgres) GetOrg(login, pwd string) (packom.Org, error) {
 	var org packom.Org
-	query := `select o_id from public."Orgs" where login=$1 and hashed_pwd=$2`
+	query := `select o_id, group_id, name from public."Orgs" where login=$1 and hashed_pwd=$2`
 	err := r.db.Get(&org, query, login, pwd)
 
 	return org, err

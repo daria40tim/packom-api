@@ -20,3 +20,11 @@ func (s *TenderService) Create(O_Id int, tender packom.Tender) (int, error) {
 func (s *TenderService) GetAll(O_Id int) ([]packom.TenderAll, error) {
 	return s.repo.GetAll(O_Id)
 }
+
+func (s *TenderService) GetById(id int) (packom.TenderById, error) {
+	return s.repo.GetById(id)
+}
+
+func (s *TenderService) GetFullCosts(id int) ([]packom.FullCost, error) {
+	return s.repo.GetFullCosts(id)
+}

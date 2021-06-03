@@ -68,6 +68,16 @@ func (r *TechPostgres) Create(O_Id int, tech packom.Tech) (int, error) {
 		return 0, err
 	}
 
+	var tender_id int
+	query = `INSERT INTO public."Tenders"(
+		tender_id, date, selected_cp, tz_id, history)
+VALUES (default,   $1,   $2,          $3,    $4) returning tender_id`
+
+	row = r.db.QueryRow(query, tech.End_date, 0, Tz_Id, "")
+	if err := row.Scan(&tender_id); err != nil {
+		return 0, err
+	}
+
 	for _, v := range tech.Calendars {
 
 		var name_id int

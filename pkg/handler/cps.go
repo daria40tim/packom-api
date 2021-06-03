@@ -15,7 +15,7 @@ func (h *Handler) createCP(c *gin.Context) {
 		return
 	}
 
-	var input packom.CP
+	var input packom.CPIns
 	if err := c.BindJSON(&input); err != nil {
 		newErrorResponse(c, http.StatusBadRequest, err.Error())
 		return
@@ -76,5 +76,68 @@ func (h *Handler) getCPById(c *gin.Context) {
 }
 
 func (h *Handler) updateCPById(c *gin.Context) {
+	id, err := strconv.Atoi(c.Param("id"))
+	if err != nil {
+		newErrorResponse(c, http.StatusBadRequest, "invalid id param")
+		return
+	}
 
+	var input packom.CPIns
+	if err := c.BindJSON(&input); err != nil {
+		newErrorResponse(c, http.StatusBadRequest, err.Error())
+		return
+	}
+
+	cp_id, err := h.services.CP.UpdateById(id, input)
+	if err != nil {
+		newErrorResponse(c, http.StatusInternalServerError, err.Error())
+		return
+	}
+	c.JSON(http.StatusOK, map[string]interface{}{
+		"cp_id": cp_id,
+	})
+
+}
+
+func (h *Handler) cpDeleteCal(c *gin.Context) {
+	var input int
+	if err := c.BindJSON(&input); err != nil {
+		newErrorResponse(c, http.StatusBadRequest, err.Error())
+		return
+	}
+
+	/*id, err := strconv.Atoi(input)
+	if err != nil {
+		newErrorResponse(c, http.StatusBadRequest, "invalid id param")
+		return
+	}*/
+
+	data, err := h.services.CP.DeleteCal(input)
+	if err != nil {
+		newErrorResponse(c, http.StatusInternalServerError, err.Error())
+		return
+	}
+
+	c.JSON(http.StatusOK, data)
+}
+
+func (h *Handler) cpDeleteCst(c *gin.Context) {
+	var input int
+	if err := c.BindJSON(&input); err != nil {
+		newErrorResponse(c, http.StatusBadRequest, err.Error())
+		return
+	}
+	/*id, err := strconv.Atoi(input)
+	if err != nil {
+		newErrorResponse(c, http.StatusBadRequest, "invalid id param")
+		return
+	}*/
+
+	data, err := h.services.CP.DeleteCst(input)
+	if err != nil {
+		newErrorResponse(c, http.StatusInternalServerError, err.Error())
+		return
+	}
+
+	c.JSON(http.StatusOK, data)
 }

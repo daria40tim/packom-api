@@ -82,13 +82,16 @@ func (h *Handler) InitRoutes() *gin.Engine {
 			cps.GET("/", h.getAllCPs)
 			cps.GET("/:id", h.getCPById)
 			cps.PUT("/:id", h.updateCPById)
+			cps.POST("/delete_cal", h.cpDeleteCal)
+			cps.POST("/delete_cst", h.cpDeleteCst)
 		}
 		tenders := api.Group("/tenders")
 		{
 			tenders.POST("/", h.createTender)
 			tenders.GET("/", h.getAllTenders)
 			tenders.GET("/:id", h.getTenderById)
-			tenders.PUT("/:id", h.updateTenderById)
+			//tenders.PUT("/:id", h.updateTenderById)
+			tenders.GET("/min", h.getMinandMax)
 		}
 	}
 

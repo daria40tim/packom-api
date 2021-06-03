@@ -12,14 +12,19 @@ type Authorization interface {
 }
 
 type CP interface {
-	Create(O_Id int, cp packom.CP) (int, error)
+	Create(O_Id int, cp packom.CPIns) (int, error)
 	GetAll(O_Id int /*filter packom.TechFilter*/) ([]packom.CPAll, error)
-	GetById(O_Id, cp_id int) (packom.CP, error)
+	GetById(O_Id, cp_id int) (packom.CPId, error)
+	UpdateById(cp_id int, input packom.CPIns) (int, error)
+	DeleteCal(id int) (int, error)
+	DeleteCst(id int) (int, error)
 }
 
 type Tender interface {
 	Create(O_Id int, tender packom.Tender) (int, error)
 	GetAll(O_Id int /*filter packom.TechFilter*/) ([]packom.TenderAll, error)
+	GetById(id int) (packom.TenderById, error)
+	GetFullCosts(id int) ([]packom.FullCost, error)
 }
 
 type Tech interface {

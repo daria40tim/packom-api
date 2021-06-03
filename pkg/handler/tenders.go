@@ -2,6 +2,7 @@ package handler
 
 import (
 	"net/http"
+	"strconv"
 
 	"github.com/daria40tim/packom"
 	"github.com/gin-gonic/gin"
@@ -54,8 +55,45 @@ func (h *Handler) getAllTenders(c *gin.Context) {
 
 func (h *Handler) getTenderById(c *gin.Context) {
 
+	id, err := strconv.Atoi(c.Param("id"))
+	if err != nil {
+		newErrorResponse(c, http.StatusBadRequest, "invalid id param")
+		return
+	}
+
+	tender, err := h.services.Tender.GetById(id)
+	if err != nil {
+		newErrorResponse(c, http.StatusInternalServerError, err.Error())
+		return
+	}
+
+	c.JSON(http.StatusOK, tender)
 }
 
-func (h *Handler) updateTenderById(c *gin.Context) {
+type getFullCostsResponse struct {
+	Data []packom.FullCost `json:"data"`
+}
+
+func (h *Handler) getMinandMax(c *gin.Context) {
+	var input string
+	if err := c.BindJSON(&input); err != nil {
+		newErrorResponse(c, http.StatusBadRequest, err.Error())
+		return
+	}
+	tz_id, err := strconv.Atoi(input)
+	if err != nil {
+		newErrorResponse(c, http.StatusBadRequest, "invalid id param")
+		return
+	}
+
+	res, err := h.services.Tender.GetFullCosts(tz_id)
+	if err != nil {
+		newErrorResponse(c, http.StatusInternalServerError, err.Error())
+		return
+	}
+
+	c.JSON(http.StatusOK, getFullCostsResponse{
+		Data: res,
+	})
 
 }

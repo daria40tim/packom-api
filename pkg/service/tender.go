@@ -28,3 +28,7 @@ func (s *TenderService) GetById(id int) (packom.TenderById, error) {
 func (s *TenderService) GetFullCosts(id int) ([]packom.FullCost, error) {
 	return s.repo.GetFullCosts(id)
 }
+
+func (s *TenderService) UpdateById(input packom.Tender) (int, error) {
+	return s.repo.UpdateById(input)
+}

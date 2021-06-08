@@ -29,7 +29,7 @@ func (r *TenderPostgres) Create(O_Id int, tender packom.Tender) (int, error) {
 
 func (r *TenderPostgres) GetAll(O_Id int) ([]packom.TenderAll, error) {
 	var techs []packom.TenderAll
-	query := `SELECT tender_id, public."Tenders".date, selected_cp, public."Techs".proj , public."Tenders".tz_id, public."Techs".task_name as task,
+	query := `SELECT tender_id, public."Tenders".date, public."Techs".selected_cp, public."Techs".proj , public."Tenders".tz_id, public."Techs".tz_st, public."Techs".task_name as task,
 	public."Pack_groups".name as group, public."Pack_types".name as type, public."Pack_kinds".name as kind
 	   FROM public."Tenders"
 	   join public."Techs" on public."Tenders".tz_id = public."Techs".tz_id
@@ -49,7 +49,7 @@ func (r *TenderPostgres) GetAll(O_Id int) ([]packom.TenderAll, error) {
 func (r *TenderPostgres) GetById(id int) (packom.TenderById, error) {
 	var res packom.TenderById
 
-	query := `SELECT tender_id, public."Tenders".date, selected_cp, public."Tenders".tz_id,  public."Orgs".name as client, 
+	query := `SELECT tender_id, public."Tenders".date, public."Techs".selected_cp,public."Techs".active, public."Tenders".tz_id,  public."Orgs".name as client, 
 	public."Techs".task_name as task,  public."Techs".proj as proj
 	   FROM public."Tenders"
 	   join public."Techs" on public."Techs".tz_id = public."Tenders".tz_id
@@ -59,6 +59,19 @@ func (r *TenderPostgres) GetById(id int) (packom.TenderById, error) {
 	err := r.db.Get(&res, query, id)
 	if err != nil {
 		return res, err
+	}
+
+	var cp []int
+	query = `SELECT cp_id
+	FROM public."CP"
+	where tz_id = $1`
+	err = r.db.Select(&cp, query, res.Tz_id)
+	if err != nil {
+		return res, err
+	}
+
+	if len(cp) == 0 {
+		return res, nil
 	}
 
 	var fcst []float32
@@ -194,4 +207,36 @@ func (r *TenderPostgres) GetFullCosts(id int) ([]packom.FullCost, error) {
 
 	return res, nil
 
+}
+
+func (r *TenderPostgres) UpdateById(input packom.Tender) (int, error) {
+	var tender_id int
+	if input.Selected_cp != 0 {
+		query := `UPDATE public."Tenders"
+	SET selected_cp=$1
+	WHERE tender_id=$2 returning  tender_id`
+		row := r.db.QueryRow(query, input.Selected_cp, input.Tender_id)
+		if err := row.Scan(&tender_id); err != nil {
+			return 0, err
+		}
+
+		query = `UPDATE public."Techs"
+		SET tz_st=3, selected_cp=$1
+		WHERE tz_id = $2 returning tz_id`
+		row = r.db.QueryRow(query, input.Selected_cp, input.Tender_id)
+		if err := row.Scan(&tender_id); err != nil {
+			return 0, err
+		}
+
+		return tender_id, nil
+	} else {
+		query := `UPDATE public."Techs"
+	SET tz_st=4, active = false
+	WHERE tz_id = $1 returning tz_id`
+		row := r.db.QueryRow(query, input.Tz_id)
+		if err := row.Scan(&tender_id); err != nil {
+			return 0, err
+		}
+		return tender_id, nil
+	}
 }

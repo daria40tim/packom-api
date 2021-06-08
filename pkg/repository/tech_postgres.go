@@ -63,7 +63,7 @@ func (r *TechPostgres) Create(O_Id int, tech packom.Tech) (int, error) {
 	createTechQuery := `INSERT INTO public."Techs"
 	(tz_id, date, o_id, end_date, proj, group_id, kind_id, type_id, tz_st, tender_st, cp_st, pay_cond_id, private, info, history, task_name)
 	VALUES (default, $1, $2, $3, $4,   $5,       $6,      $7,       $8,    $9,        $10,   $11,         $12,     $13,  $14, $15) returning  tz_id`
-	row := r.db.QueryRow(createTechQuery, tech.Date, O_Id, tech.End_date, tech.Proj, group_id, kind_id, type_id, tech.Tz_st, tech.Tender_st, tech.Cp_st, pay_cond_id, tech.Private, tech.Info, tech.History, tech.Task)
+	row := r.db.QueryRow(createTechQuery, tech.Date, O_Id, tech.End_date, tech.Proj, group_id, kind_id, type_id, 0, tech.Tender_st, tech.Cp_st, pay_cond_id, tech.Private, tech.Info, tech.History, tech.Task)
 	if err := row.Scan(&Tz_Id); err != nil {
 		return 0, err
 	}
@@ -135,6 +135,20 @@ VALUES (default,   $1,   $2,          $3,    $4) returning tender_id`
 		}
 	}
 
+	for _, v := range tech.Docs {
+
+		var name_id int
+
+		query = `INSERT INTO public."Tech_docs"(
+			tz_id, file_name, active)
+			VALUES ($1, $2, true) returning  tz_id`
+		row := r.db.QueryRow(query, Tz_Id, v)
+		if err := row.Scan(&name_id); err != nil {
+			return 0, err
+		}
+
+	}
+
 	return Tz_Id, nil
 }
 
@@ -152,7 +166,7 @@ func (r *TechPostgres) GetAll(O_Id int) (packom.TechAllCP, error) {
 
 	var techs []packom.TechAll
 
-	query = `SELECT distinct public."Techs".date,  public."Techs".task_name as task,public."Techs".end_date, public."Orgs".name as client, public."Techs".o_id, public."Techs".tz_id,  public."Techs".end_date, 
+	query = `SELECT distinct public."Techs".date,public."Techs".selected_cp,  public."Techs".task_name as task,public."Techs".end_date, public."Orgs".name as client, public."Techs".o_id, public."Techs".tz_id,  public."Techs".end_date, 
 	public."Techs".proj, public."Pack_groups".name as group, public."Pack_types".name as type, public."Pack_kinds".name as kind, 
 	count(cp_id) over (partition by public."Techs".tz_id) as cp_count
 	FROM public."Techs" join public."Orgs" on public."Techs".o_id=public."Orgs".o_id 
@@ -443,6 +457,19 @@ func (r *TechPostgres) UpdateById(id int, tech packom.Tech) (int, error) {
 	VALUES (default, $1,      $2,     $3,   $4,    $5,   $6,  $7, $8) returning  cost_id`
 		row := r.db.QueryRow(createTechQuery, metr_id, v.Count, id, nil, nil, v.Info, task_id, true)
 		if err := row.Scan(&cost_id); err != nil {
+			return 0, err
+		}
+	}
+
+	for _, v := range tech.Docs {
+
+		var name_id int
+
+		query = `INSERT INTO public."Tech_docs"(
+			tz_id, file_name, active)
+			VALUES ($1, $2, true) returning  tz_id`
+		row := r.db.QueryRow(query, Tz_Id, v)
+		if err := row.Scan(&name_id); err != nil {
 			return 0, err
 		}
 	}

@@ -98,6 +98,19 @@ VALUES (default, $1,  $2,   $3,     $4,  $5,    $6,         $7,       $8,   $9) 
 		}
 	}
 
+	for _, v := range cp.Docs {
+
+		var name_id int
+
+		query = `INSERT INTO public."CP_docs"(
+			file_name, cp_id, active)
+			VALUES ($1, $2, true) returning  cp_id`
+		row := r.db.QueryRow(query, v, CP_Id)
+		if err := row.Scan(&name_id); err != nil {
+			return 0, err
+		}
+	}
+
 	return CP_Id, nil
 }
 
@@ -303,6 +316,19 @@ func (r *CPPostgres) UpdateById(cp_id int, cp packom.CPIns) (int, error) {
 	VALUES (default, $1,      $2,     $3,   $4,    $5,   $6,  $7, true) returning  cost_id`
 		row := r.db.QueryRow(createTechQuery, nil, nil, nil, CP_Id, v.PPU, v.Info, task_id)
 		if err := row.Scan(&cost_id); err != nil {
+			return 0, err
+		}
+	}
+
+	for _, v := range cp.Docs {
+
+		var name_id int
+
+		query = `INSERT INTO public."CP_docs"(
+			file_name, cp_id, active)
+			VALUES ($1, $2, true) returning  cp_id`
+		row := r.db.QueryRow(query, v, CP_Id)
+		if err := row.Scan(&name_id); err != nil {
 			return 0, err
 		}
 	}

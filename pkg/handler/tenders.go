@@ -97,3 +97,18 @@ func (h *Handler) getMinandMax(c *gin.Context) {
 	})
 
 }
+func (h *Handler) updateTenderById(c *gin.Context) {
+	var input packom.Tender
+	if err := c.BindJSON(&input); err != nil {
+		newErrorResponse(c, http.StatusBadRequest, err.Error())
+		return
+	}
+
+	tender, err := h.services.Tender.UpdateById(input)
+	if err != nil {
+		newErrorResponse(c, http.StatusInternalServerError, err.Error())
+		return
+	}
+
+	c.JSON(http.StatusOK, tender)
+}

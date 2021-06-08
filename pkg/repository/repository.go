@@ -31,6 +31,7 @@ type Tender interface {
 	GetAll(O_Id int /*, filter packom.TechFilter*/) ([]packom.TenderAll, error)
 	GetById(id int) (packom.TenderById, error)
 	GetFullCosts(id int) ([]packom.FullCost, error)
+	UpdateById(input packom.Tender) (int, error)
 }
 
 type Tech interface {

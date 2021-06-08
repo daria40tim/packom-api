@@ -11,6 +11,7 @@ type Tender struct {
 type TenderAll struct {
 	Tender_id   int    `json:"tender_id" db:"tender_id"`
 	Tz_id       int    `json:"tz_id" db:"tz_id"`
+	Tz_st       int    `json:"tz_st" db:"tz_st"`
 	Date        string `json:"date" db:"date"`
 	Proj        string `json:"proj" db:"proj"`
 	Group       string `json:"group" db:"group"`
@@ -37,6 +38,7 @@ type TenderById struct {
 	Tz_Costs     []Cost     `json:"tz_costs"`
 	Tz_Calendars []string   `json:"tz_calendars"`
 	CPs          []TenderCP `json:"cps"`
+	Active       bool       `json:"active" db:"active"`
 }
 
 type FullCost struct {

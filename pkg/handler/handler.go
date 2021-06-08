@@ -90,7 +90,7 @@ func (h *Handler) InitRoutes() *gin.Engine {
 			tenders.POST("/", h.createTender)
 			tenders.GET("/", h.getAllTenders)
 			tenders.GET("/:id", h.getTenderById)
-			//tenders.PUT("/:id", h.updateTenderById)
+			tenders.PUT("/decide", h.updateTenderById)
 			tenders.GET("/min", h.getMinandMax)
 		}
 	}

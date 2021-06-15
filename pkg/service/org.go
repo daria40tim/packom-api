@@ -22,10 +22,20 @@ func (s *OrgService) GetById(O_Id, o_id int) (packom.OrgId, error) {
 }
 
 func (s *OrgService) UpdateById(O_Id int, input packom.OrgI) (int, error) {
-	input.Pwd = generatePasswordHash(input.Pwd)
+	if input.Pwd != "" {
+		input.Pwd = generatePasswordHash(input.Pwd)
+	}
 	return s.repo.UpdateById(O_Id, input)
 }
 
 func (s *OrgService) AddById(O_Id, input int) (int, error) {
 	return s.repo.AddById(O_Id, input)
+}
+
+func (s *OrgService) SelectAllSpecs() (packom.Specs, error) {
+	return s.repo.SelectAllSpecs()
+}
+
+func (s *OrgService) AddDoc(name string, o_id int) error {
+	return s.repo.AddDoc(name, o_id)
 }

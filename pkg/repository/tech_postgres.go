@@ -1,6 +1,9 @@
 package repository
 
 import (
+	"os"
+	"strconv"
+
 	"github.com/daria40tim/packom"
 	"github.com/jmoiron/sqlx"
 )
@@ -65,6 +68,11 @@ func (r *TechPostgres) Create(O_Id int, tech packom.Tech) (int, error) {
 	VALUES (default, $1, $2, $3, $4,   $5,       $6,      $7,       $8,    $9,        $10,   $11,         $12,     $13,  $14, $15) returning  tz_id`
 	row := r.db.QueryRow(createTechQuery, tech.Date, O_Id, tech.End_date, tech.Proj, group_id, kind_id, type_id, 0, tech.Tender_st, tech.Cp_st, pay_cond_id, tech.Private, tech.Info, tech.History, tech.Task)
 	if err := row.Scan(&Tz_Id); err != nil {
+		return 0, err
+	}
+
+	err = os.MkdirAll("techs/"+strconv.Itoa(Tz_Id), 0777)
+	if err != nil {
 		return 0, err
 	}
 
@@ -154,30 +162,59 @@ VALUES (default,   $1,   $2,          $3,    $4) returning tender_id`
 
 func (r *TechPostgres) GetAll(O_Id int) (packom.TechAllCP, error) {
 	var res packom.TechAllCP
+	var group_id int
+
+	query := `SELECT group_id
+	FROM public."Orgs" where o_id = $1`
+
+	err := r.db.Get(&group_id, query, O_Id)
+	if err != nil {
+		return res, err
+	}
+
 	var cps []packom.CP_srv
 
-	query := `SELECT cp_id, date, tz_id, o_id, end_date
+	query = `SELECT cp_id, date, tz_id, o_id, end_date
 	FROM public."CP" where o_id=$1`
 
-	err := r.db.Select(&cps, query, O_Id)
+	err = r.db.Select(&cps, query, O_Id)
 	if err != nil {
 		return res, err
 	}
 
 	var techs []packom.TechAll
 
-	query = `SELECT distinct public."Techs".date,public."Techs".selected_cp,  public."Techs".task_name as task,public."Techs".end_date, public."Orgs".name as client, public."Techs".o_id, public."Techs".tz_id,  public."Techs".end_date, 
+	if group_id == 1 {
+		query = `SELECT distinct public."Techs".date,public."Techs".selected_cp,  public."Techs".task_name as task,public."Techs".end_date, public."Orgs".name as client, public."Techs".o_id, public."Techs".tz_id,  public."Techs".end_date, 
 	public."Techs".proj, public."Pack_groups".name as group, public."Pack_types".name as type, public."Pack_kinds".name as kind, 
 	count(cp_id) over (partition by public."Techs".tz_id) as cp_count
 	FROM public."Techs" join public."Orgs" on public."Techs".o_id=public."Orgs".o_id 
 	join public."Pack_groups" on public."Pack_groups".group_id=public."Techs".group_id 
 	join public."Pack_types" on public."Pack_types".type_id=public."Techs".type_id 
 	join public."Pack_kinds" on public."Pack_kinds".kind_id=public."Techs".kind_id 
-	left join public."CP" on public."CP".tz_id=public."Techs".tz_id `
+	left join public."CP" on public."CP".tz_id=public."Techs".tz_id 
+	where public."Techs".o_id=$1`
 
-	err = r.db.Select(&techs, query)
+		err = r.db.Select(&techs, query, O_Id)
 
-	res.Techs = techs
+		res.Techs = techs
+	} else {
+
+		query = `SELECT distinct public."Techs".date,public."Techs".selected_cp,  public."Techs".task_name as task,public."Techs".end_date, public."Orgs".name as client, public."Techs".o_id, public."Techs".tz_id,  public."Techs".end_date, 
+	public."Techs".proj, public."Pack_groups".name as group, public."Pack_types".name as type, public."Pack_kinds".name as kind, 
+	count(cp_id) over (partition by public."Techs".tz_id) as cp_count
+	FROM public."Techs" join public."Orgs" on public."Techs".o_id=public."Orgs".o_id 
+	join public."Pack_groups" on public."Pack_groups".group_id=public."Techs".group_id 
+	join public."Pack_types" on public."Pack_types".type_id=public."Techs".type_id 
+	join public."Pack_kinds" on public."Pack_kinds".kind_id=public."Techs".kind_id 
+	left join public."CP" on public."CP".tz_id=public."Techs".tz_id 
+	where not private or $1 in (select distinct f_o_id from public."Orgs_orgs" where public."Orgs_orgs".o_id = public."Techs".o_id)`
+
+		err = r.db.Select(&techs, query, O_Id)
+
+		res.Techs = techs
+	}
+
 	res.Cps = cps
 
 	return res, err
@@ -235,7 +272,7 @@ func (r *TechPostgres) GetById(O_Id, tz_id int) (packom.Tech, []packom.Cost, []p
 		join public."Pack_groups" on public."Pack_groups".group_id = public."Techs".group_id
 		join public."Pack_kinds" on public."Pack_kinds".kind_id = public."Techs".kind_id
 		join public."Pack_types" on public."Pack_types".type_id = public."Techs".type_id
-		join public."Pay_conds" on public."Pay_conds".pay_cond_id = public."Techs".type_id
+		join public."Pay_conds" on public."Pay_conds".pay_cond_id = public."Techs".pay_cond_id
 		where tz_id = $1`
 
 	err = r.db.Get(&tech, query, tz_id)
@@ -306,7 +343,7 @@ func (r *TechPostgres) SelectAll() (packom.Select, error) {
 	return res, nil
 }
 
-func (r *TechPostgres) DeleteCost(tz_id int, task string) (int, error) {
+func (r *TechPostgres) DeleteCost(tz_id int, task, history string) (int, error) {
 	var task_id int
 	var res int
 
@@ -316,11 +353,20 @@ func (r *TechPostgres) DeleteCost(tz_id int, task string) (int, error) {
 		return 0, err
 	}
 
+	query = `UPDATE public."Techs"
+	SET history=$1
+	WHERE tz_id=$2 returning tz_id`
+
+	row := r.db.QueryRow(query, history, tz_id)
+	if err = row.Scan(&res); err != nil {
+		return 0, err
+	}
+
 	query = `UPDATE public."Costs"
 	SET active=false
 	WHERE tz_id = $1 and task_id = $2 returning cost_id`
 
-	row := r.db.QueryRow(query, tz_id, task_id)
+	row = r.db.QueryRow(query, tz_id, task_id)
 	if err = row.Scan(&res); err != nil {
 		return 0, err
 	}
@@ -328,7 +374,7 @@ func (r *TechPostgres) DeleteCost(tz_id int, task string) (int, error) {
 	return res, nil
 }
 
-func (r *TechPostgres) DeleteCal(tz_id int, name string) (int, error) {
+func (r *TechPostgres) DeleteCal(tz_id int, name, history string) (int, error) {
 	var name_id int
 	var res int
 
@@ -347,6 +393,14 @@ func (r *TechPostgres) DeleteCal(tz_id int, name string) (int, error) {
 		return 0, err
 	}
 
+	query = `UPDATE public."Techs"
+	SET history=$1
+	WHERE tz_id=$2 returning tz_id`
+
+	row = r.db.QueryRow(query, history, tz_id)
+	if err = row.Scan(&res); err != nil {
+		return 0, err
+	}
 	return res, nil
 }
 
@@ -397,9 +451,9 @@ func (r *TechPostgres) UpdateById(id int, tech packom.Tech) (int, error) {
 
 	var Tz_Id int
 	updateTechQuery := `UPDATE public."Techs"
-	SET proj=$1, group_id=$2, kind_id=$3, type_id=$4, pay_cond_id=$5, info=$6, history=$7, task_name=$8
-	WHERE tz_id=$9 returning group_id;`
-	row := r.db.QueryRow(updateTechQuery, tech.Proj, group_id, kind_id, type_id, pay_cond_id, tech.Info, tech.History, tech.Task, id)
+	SET proj=$1, group_id=$2, kind_id=$3, type_id=$4, pay_cond_id=$5, info=$6, history=$7, task_name=$8, end_date = $9
+	WHERE tz_id=$10 returning group_id;`
+	row := r.db.QueryRow(updateTechQuery, tech.Proj, group_id, kind_id, type_id, pay_cond_id, tech.Info, tech.History, tech.Task, tech.End_date, id)
 	if err := row.Scan(&Tz_Id); err != nil {
 		return 0, err
 	}
@@ -460,19 +514,20 @@ func (r *TechPostgres) UpdateById(id int, tech packom.Tech) (int, error) {
 			return 0, err
 		}
 	}
+	return 0, nil
+}
 
-	for _, v := range tech.Docs {
+func (r *TechPostgres) AddTechDoc(name string, o_id, tz_id int) error {
+	var id int
 
-		var name_id int
+	query := `INSERT INTO public."Tech_docs"(
+		tz_id, file_name)
+		VALUES ($1, $2) returning tz_id`
 
-		query = `INSERT INTO public."Tech_docs"(
-			tz_id, file_name, active)
-			VALUES ($1, $2, true) returning  tz_id`
-		row := r.db.QueryRow(query, Tz_Id, v)
-		if err := row.Scan(&name_id); err != nil {
-			return 0, err
-		}
+	row := r.db.QueryRow(query, tz_id, name)
+	if err := row.Scan(&id); err != nil {
+		return err
 	}
 
-	return 0, nil
+	return nil
 }

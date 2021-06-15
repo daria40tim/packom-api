@@ -2,7 +2,9 @@ package handler
 
 import (
 	"net/http"
+	"path/filepath"
 	"strconv"
+	"strings"
 
 	"github.com/daria40tim/packom"
 	"github.com/gin-gonic/gin"
@@ -140,4 +142,80 @@ func (h *Handler) cpDeleteCst(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusOK, data)
+}
+
+func (h *Handler) getCpDocsById(c *gin.Context) {
+	O_Id, err := getOId(c)
+	if err != nil {
+		newErrorResponse(c, http.StatusBadRequest, err.Error())
+		return
+	}
+
+	var input packom.Org_docs
+
+	id, err := strconv.Atoi(c.Param("id"))
+	if err != nil {
+		newErrorResponse(c, http.StatusBadRequest, "invalid id param")
+		return
+	}
+
+	err = c.ShouldBind(&input)
+	if err != nil {
+		newErrorResponse(c, http.StatusBadRequest, err.Error())
+		return
+	}
+
+	err = c.ShouldBindUri(&input)
+	if err != nil {
+		newErrorResponse(c, http.StatusBadRequest, err.Error())
+		return
+	}
+
+	filename := strings.Split(input.Docs.Filename, "/")
+
+	name := filename[len(filename)-1]
+
+	err = c.SaveUploadedFile(input.Docs, "cps/"+strconv.Itoa(id)+"/"+name)
+	if err != nil {
+		newErrorResponse(c, http.StatusBadRequest, err.Error())
+		return
+	}
+
+	err = h.services.CP.AddCPDoc(name, O_Id, id)
+	if err != nil {
+		newErrorResponse(c, http.StatusInternalServerError, err.Error())
+		return
+	}
+
+	c.JSON(http.StatusOK, map[string]interface{}{
+		"o_id": O_Id,
+	})
+}
+
+func (h *Handler) getCpDoc(c *gin.Context) {
+	/*O_Id, err := getOId(c)
+	if err != nil {
+		newErrorResponse(c, http.StatusBadRequest, err.Error())
+		return
+	}*/
+	name := c.Param("name")
+
+	id, err := strconv.Atoi(c.Param("id"))
+	if err != nil {
+		newErrorResponse(c, http.StatusBadRequest, err.Error())
+		return
+	}
+
+	target := "cps/" + strconv.Itoa(id) + "/" + name
+
+	if strings.HasPrefix(filepath.Clean(target), "assets/") {
+		c.String(403, "Look like you attacking me")
+		return
+	}
+
+	c.Header("Content-Description", "File Transfer")
+	c.Header("Content-Transfer-Encoding", "binary")
+	c.Header("Content-Disposition", "attachment; filename="+name)
+	c.Header("Content-Type", "application/octet-stream")
+	c.FileAttachment(target, name)
 }

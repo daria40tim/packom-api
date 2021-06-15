@@ -14,6 +14,7 @@ func NewOrgPostgres(db *sqlx.DB) *OrgPostgres {
 }
 
 func (r *OrgPostgres) GetAll(O_Id int) ([]packom.OrgAll, error) {
+
 	var techs []packom.OrgAll
 
 	query := `SELECT public."Orgs".name, public."Orgs".o_id, case group_id when 1 then 'Клиент' when 2 then 'Поставщик' else 'Клиент, Поставщик' end as group, site, phone, email, public."Specs".name as specs, public."Countries".name as countries 
@@ -35,7 +36,7 @@ func (r *OrgPostgres) GetById(O_Id, o_id int) (packom.OrgId, error) {
 	var docs []string
 	var e_docs []string
 
-	query := `SELECT public."Orgs".name, public."Orgs".o_id, case group_id when 1 then 'Поставщик' when 2 then 'Клиент' else 'Клиент, Поставщик' end as group, site, phone, email, public."Specs".name as specs, public."Countries".name as countries 
+	query := `SELECT public."Orgs".name, public."Orgs".o_id, case group_id when 1 then 'Поставщик' when 2 then 'Клиент' else 'Клиент, Поставщик' end as group, site, phone, email, public."Specs".name as specs, public."Countries".name as countries
 	FROM public."Orgs"
 	left join public."Orgs_specs" on public."Orgs".o_id=public."Orgs_specs".o_id
 	left join public."Specs" on public."Specs".spec_id=public."Orgs_specs".spec_id
@@ -54,7 +55,7 @@ func (r *OrgPostgres) GetById(O_Id, o_id int) (packom.OrgId, error) {
 		org.Orgs = orgs
 	}
 
-	query = `SELECT file_name
+	query = `SELECT distinct file_name
 	FROM public."Orgs_docs"
 	where o_id = $1;`
 
@@ -70,7 +71,7 @@ func (r *OrgPostgres) GetById(O_Id, o_id int) (packom.OrgId, error) {
 	}
 
 	query = `SELECT public."Orgs".o_id, public."Orgs".login, public."Orgs".name, case group_id when 1 then 'Клиент' when 2 then 'Поставщик' else 'Клиент, Поставщик' end as group, site, phone, email, 
-	adress, '' as info, status, '' as history, public."Specs".name as specs, public."Countries".name as countries
+	adress, '' as info, status, public."Specs".name as specs, public."Countries".name as countries, history
 		FROM public."Orgs"
 		join public."Orgs_specs" on  public."Orgs_specs".o_id=public."Orgs".o_id
 		join public."Specs" on  public."Specs".spec_id=public."Orgs_specs".spec_id
@@ -86,24 +87,53 @@ func (r *OrgPostgres) GetById(O_Id, o_id int) (packom.OrgId, error) {
 func (r *OrgPostgres) UpdateById(O_Id int, input packom.OrgI) (int, error) {
 	var id int
 
-	query := `UPDATE public."Orgs"
-	SET site=$2, phone=$3, email=$4, adress=$5, info=$6, hashed_pwd=$7
+	if input.Pwd != "" {
+		query := `UPDATE public."Orgs"
+	SET site=$2, phone=$3, email=$4, adress=$5, info=$6, hashed_pwd=$7, history=$8
 	WHERE o_id = $1 
 	returning o_id;`
 
-	row := r.db.QueryRow(query, O_Id, input.Site, input.Phone, input.Email, input.Adress, input.Info, input.Pwd)
-	if err := row.Scan(&id); err != nil {
-		return 0, err
-	}
-
-	var spec_id int
-	query = `select spec_id from public."Specs" where name=$1`
-	err := r.db.Get(&spec_id, query, input.Specs)
-	if err != nil {
-		query = `INSERT INTO public."Specs" (spec_id, name) VALUES (default, $1) returning  spec_id`
-		row := r.db.QueryRow(query, input.Specs)
-		if err := row.Scan(&spec_id); err != nil {
+		row := r.db.QueryRow(query, O_Id, input.Site, input.Phone, input.Email, input.Adress, input.Info, input.Pwd, input.History)
+		if err := row.Scan(&id); err != nil {
 			return 0, err
+		}
+
+		var spec_id int
+		query = `select spec_id from public."Specs" where name=$1`
+		err := r.db.Get(&spec_id, query, input.Specs)
+		if err != nil {
+			query = `INSERT INTO public."Specs" (spec_id, name) VALUES (default, $1) returning  spec_id`
+			row := r.db.QueryRow(query, input.Specs)
+			if err := row.Scan(&spec_id); err != nil {
+				return 0, err
+			}
+		}
+		query = `UPDATE public."Orgs_specs" SET  spec_id=$1
+		WHERE o_id = $2`
+		row = r.db.QueryRow(query, spec_id, O_Id)
+		if err := row.Scan(); err != nil {
+			return 0, err
+		}
+	} else {
+		query := `UPDATE public."Orgs"
+	SET site=$2, phone=$3, email=$4, adress=$5, info=$6, history=$7
+	WHERE o_id = $1 
+	returning o_id;`
+
+		row := r.db.QueryRow(query, O_Id, input.Site, input.Phone, input.Email, input.Adress, input.Info, input.History)
+		if err := row.Scan(&id); err != nil {
+			return 0, err
+		}
+
+		var spec_id int
+		query = `select spec_id from public."Specs" where name=$1`
+		err := r.db.Get(&spec_id, query, input.Specs)
+		if err != nil {
+			query = `INSERT INTO public."Specs" (spec_id, name) VALUES (default, $1) returning  spec_id`
+			row := r.db.QueryRow(query, input.Specs)
+			if err := row.Scan(&spec_id); err != nil {
+				return 0, err
+			}
 		}
 		query = `UPDATE public."Orgs_specs" SET  spec_id=$1
 		WHERE o_id = $2`
@@ -129,4 +159,35 @@ func (r *OrgPostgres) AddById(O_Id, input int) (int, error) {
 	}
 
 	return id, nil
+}
+
+func (r *OrgPostgres) SelectAllSpecs() (packom.Specs, error) {
+	var specs []string
+	var res packom.Specs
+
+	query := `SELECT name FROM public."Specs"`
+
+	err := r.db.Select(&specs, query)
+	if err != nil {
+		return res, err
+	}
+
+	res.Specs = specs
+
+	return res, nil
+}
+
+func (r *OrgPostgres) AddDoc(name string, o_id int) error {
+	var id int
+
+	query := `INSERT INTO public."Orgs_docs"(
+		doc_id, file_path, file_name, o_id)
+		VALUES (default, '', $1, $2) returning doc_id`
+
+	row := r.db.QueryRow(query, name, o_id)
+	if err := row.Scan(&id); err != nil {
+		return err
+	}
+
+	return nil
 }

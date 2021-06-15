@@ -1,6 +1,9 @@
 package repository
 
 import (
+	"os"
+	"strconv"
+
 	"github.com/daria40tim/packom"
 	"github.com/jmoiron/sqlx"
 )
@@ -33,6 +36,7 @@ func (r *CPPostgres) GetAll(O_Id int /*, filter packom.TechFilter*/) ([]packom.C
 
 func (r *CPPostgres) Create(O_Id int, cp packom.CPIns) (int, error) {
 	var pay_cond_id int
+
 	query := `select pay_cond_id from public."Pay_conds" where name=$1`
 	err := r.db.Get(&pay_cond_id, query, cp.Pay_cond)
 	if err != nil {
@@ -49,6 +53,11 @@ func (r *CPPostgres) Create(O_Id int, cp packom.CPIns) (int, error) {
 VALUES (default, $1,  $2,   $3,     $4,  $5,    $6,         $7,       $8,   $9) returning  cp_id`
 	row := r.db.QueryRow(createTechQuery, cp.Date, 1, cp.Tz_id, cp.Proj, O_Id, pay_cond_id, cp.End_date, cp.Info, cp.History)
 	if err = row.Scan(&CP_Id); err != nil {
+		return 0, err
+	}
+
+	err = os.MkdirAll("cps/"+strconv.Itoa(CP_Id), 0777)
+	if err != nil {
 		return 0, err
 	}
 
@@ -187,7 +196,7 @@ func (r *CPPostgres) GetById(O_Id, cp_id int) (packom.CPId, error) {
 
 	query = `with a as (SELECT cost_id, metr_id, count, tz_id, cp_id, ppu, info, task_id, sum, active
 		FROM public."Costs" where tz_id = $1 and active)
-	SELECT a.count, a.tz_id, public."Costs".cp_id, public."Costs".ppu, public."Costs".info, public."Tasks".name as task, a.active, 
+	SELECT distinct a.count, a.tz_id, public."Costs".cp_id, public."Costs".ppu, public."Costs".info, public."Tasks".name as task, a.active, 
 	public."Metrics".name as metr
 	FROM public."Costs"
 		join a on a.task_id = public."Costs".task_id
@@ -224,7 +233,7 @@ func (r *CPPostgres) GetById(O_Id, cp_id int) (packom.CPId, error) {
 		return cp, err
 	}
 
-	if docs == nil {
+	if tz_docs == nil {
 		cp.Tz_Docs = e_docs
 	} else {
 		cp.Tz_Docs = tz_docs
@@ -320,19 +329,6 @@ func (r *CPPostgres) UpdateById(cp_id int, cp packom.CPIns) (int, error) {
 		}
 	}
 
-	for _, v := range cp.Docs {
-
-		var name_id int
-
-		query = `INSERT INTO public."CP_docs"(
-			file_name, cp_id, active)
-			VALUES ($1, $2, true) returning  cp_id`
-		row := r.db.QueryRow(query, v, CP_Id)
-		if err := row.Scan(&name_id); err != nil {
-			return 0, err
-		}
-	}
-
 	return CP_Id, nil
 }
 
@@ -360,4 +356,19 @@ func (r *CPPostgres) DeleteCst(id int) (int, error) {
 	}
 
 	return 0, nil
+}
+
+func (r *CPPostgres) AddCPDoc(name string, o_id, cp_id int) error {
+	var id int
+
+	query := `INSERT INTO public."CP_docs"(
+		cp_id, file_name)
+		VALUES ($1, $2) returning cp_id`
+
+	row := r.db.QueryRow(query, cp_id, name)
+	if err := row.Scan(&id); err != nil {
+		return err
+	}
+
+	return nil
 }

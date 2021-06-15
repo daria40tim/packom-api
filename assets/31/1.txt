@@ -1,0 +1,4 @@
+Var dvarable, hytr, aniu; 
+        dvarable = 1+2
+        hytr = -1
+        aniu = (25+6*(3+2))*3-8/89 + hytr

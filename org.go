@@ -1,5 +1,7 @@
 package packom
 
+import "mime/multipart"
+
 type Org struct {
 	O_id      int    `json:"o_id" db:"o_id"`
 	Name      string `json:"name" db:"name"`
@@ -62,4 +64,12 @@ type OrgI struct {
 	Login     string   `json:"login" db:"login"`
 	Pwd       string   `json:"password" db:"pwd"`
 	Docs      []string `json:"docs"`
+}
+
+type Specs struct {
+	Specs []string `json:"specs"`
+}
+
+type Org_docs struct {
+	Docs *multipart.FileHeader `form:"doc"`
 }

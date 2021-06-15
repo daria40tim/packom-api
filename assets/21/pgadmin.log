@@ -1,0 +1,13 @@
+2021-05-18 21:48:37 ERROR  : ОШИБКА:  функция pg_last_xlog_receive_location() не существует
+LINE 1: ...E NULL END as inrecovery, CASE WHEN usesuper THEN pg_last_xl...
+                                                             ^
+HINT:  Функция с данными именем и типами аргументов не найдена. Возможно, вам следует добавить явные приведения типов.
+2021-05-18 21:48:42 ERROR  : Column not found in pgSet: usecreatedb
+2021-05-18 21:48:45 ERROR  : Column not found in pgSet: usesuper
+2021-05-18 21:48:46 ERROR  : Column not found in pgSet: upsince
+2021-05-18 21:48:47 ERROR  : Column not found in pgSet: confloadedsince
+2021-05-18 21:48:49 ERROR  : Column not found in pgSet: inrecovery
+2021-05-18 21:48:49 ERROR  : Column not found in pgSet: replayloc
+2021-05-18 21:48:49 ERROR  : Column not found in pgSet: receiveloc
+2021-05-18 21:48:50 ERROR  : Column not found in pgSet: replay_timestamp
+2021-05-18 21:48:50 ERROR  : Column not found in pgSet: isreplaypaused

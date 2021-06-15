@@ -1,0 +1,25 @@
+LIT 1 
+LIT 2 
+ADD 
+STO dvarable 
+LIT 0 
+LIT 1 
+SUB 
+STO hytr 
+LIT 25 
+LIT 6 
+LIT 3 
+LIT 2 
+ADD 
+MUL 
+ADD 
+LIT 3 
+MUL 
+LIT 8 
+LIT 89 
+DIV 
+LOAD hytr 
+ADD 
+SUB 
+STO aniu 
+aowusehfwqaopuehfo

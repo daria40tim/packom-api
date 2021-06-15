@@ -2,11 +2,13 @@ package main
 
 import (
 	"os"
+	"time"
 
 	"github.com/daria40tim/packom"
 	"github.com/daria40tim/packom/pkg/handler"
 	"github.com/daria40tim/packom/pkg/repository"
 	"github.com/daria40tim/packom/pkg/service"
+	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
 	"github.com/joho/godotenv"
 	_ "github.com/lib/pq"
@@ -61,8 +63,8 @@ func main() {
 
 	router := handlers.InitRoutes()
 
-	router.Use(CORS())
-	/*router.Use(cors.New(cors.Config{
+	//router.Use(CORS())
+	router.Use(cors.New(cors.Config{
 		AllowOrigins:     []string{"*"},
 		AllowMethods:     []string{"PUT", "PATCH"},
 		AllowHeaders:     []string{"*"},
@@ -71,8 +73,8 @@ func main() {
 		AllowOriginFunc: func(origin string) bool {
 			return origin == "https://github.com"
 		},
-		MaxAge: 12 * time.Hour,
-	}))*/
+		MaxAge: 120 * time.Hour,
+	}))
 
 	srv := new(packom.Server)
 	if err := srv.Run(viper.GetString("port"), router); err != nil {

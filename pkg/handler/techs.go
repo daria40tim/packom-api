@@ -2,7 +2,9 @@ package handler
 
 import (
 	"net/http"
+	"path/filepath"
 	"strconv"
+	"strings"
 
 	"github.com/daria40tim/packom"
 	"github.com/gin-gonic/gin"
@@ -120,8 +122,9 @@ func (h *Handler) getSelect(c *gin.Context) {
 }
 
 type delCal struct {
-	Tz_id string `json:"tz_id"`
-	Task  string `json:"task_name"`
+	Tz_id   string `json:"tz_id"`
+	Task    string `json:"task_name"`
+	History string `json:"history"`
 }
 
 func (h *Handler) deleteCal(c *gin.Context) {
@@ -137,7 +140,7 @@ func (h *Handler) deleteCal(c *gin.Context) {
 		return
 	}
 
-	data, err := h.services.Tech.DeleteCal(a, input.Task)
+	data, err := h.services.Tech.DeleteCal(a, input.Task, input.History)
 	if err != nil {
 		newErrorResponse(c, http.StatusInternalServerError, err.Error())
 		return
@@ -147,8 +150,9 @@ func (h *Handler) deleteCal(c *gin.Context) {
 }
 
 type delCst struct {
-	Tz_id string `json:"tz_id"`
-	Task  string `json:"task"`
+	Tz_id   string `json:"tz_id"`
+	Task    string `json:"task"`
+	History string `json:"history"`
 }
 
 func (h *Handler) deleteCst(c *gin.Context) {
@@ -163,7 +167,7 @@ func (h *Handler) deleteCst(c *gin.Context) {
 		newErrorResponse(c, http.StatusBadRequest, err.Error())
 		return
 	}
-	data, err := h.services.Tech.DeleteCost(a, input.Task)
+	data, err := h.services.Tech.DeleteCost(a, input.Task, input.History)
 	if err != nil {
 		newErrorResponse(c, http.StatusInternalServerError, err.Error())
 		return
@@ -171,4 +175,80 @@ func (h *Handler) deleteCst(c *gin.Context) {
 
 	c.JSON(http.StatusOK, data)
 
+}
+
+func (h *Handler) getTechDocsById(c *gin.Context) {
+	O_Id, err := getOId(c)
+	if err != nil {
+		newErrorResponse(c, http.StatusBadRequest, err.Error())
+		return
+	}
+
+	var input packom.Org_docs
+
+	id, err := strconv.Atoi(c.Param("id"))
+	if err != nil {
+		newErrorResponse(c, http.StatusBadRequest, "invalid id param")
+		return
+	}
+
+	err = c.ShouldBind(&input)
+	if err != nil {
+		newErrorResponse(c, http.StatusBadRequest, err.Error())
+		return
+	}
+
+	err = c.ShouldBindUri(&input)
+	if err != nil {
+		newErrorResponse(c, http.StatusBadRequest, err.Error())
+		return
+	}
+
+	filename := strings.Split(input.Docs.Filename, "/")
+
+	name := filename[len(filename)-1]
+
+	err = c.SaveUploadedFile(input.Docs, "techs/"+strconv.Itoa(id)+"/"+name)
+	if err != nil {
+		newErrorResponse(c, http.StatusBadRequest, err.Error())
+		return
+	}
+
+	err = h.services.Tech.AddTechDoc(name, O_Id, id)
+	if err != nil {
+		newErrorResponse(c, http.StatusInternalServerError, err.Error())
+		return
+	}
+
+	c.JSON(http.StatusOK, map[string]interface{}{
+		"o_id": O_Id,
+	})
+}
+
+func (h *Handler) getTechDoc(c *gin.Context) {
+	/*O_Id, err := getOId(c)
+	if err != nil {
+		newErrorResponse(c, http.StatusBadRequest, err.Error())
+		return
+	}*/
+	name := c.Param("name")
+
+	id, err := strconv.Atoi(c.Param("id"))
+	if err != nil {
+		newErrorResponse(c, http.StatusBadRequest, err.Error())
+		return
+	}
+
+	target := "techs/" + strconv.Itoa(id) + "/" + name
+
+	if strings.HasPrefix(filepath.Clean(target), "assets/") {
+		c.String(403, "Look like you attacking me")
+		return
+	}
+
+	c.Header("Content-Description", "File Transfer")
+	c.Header("Content-Transfer-Encoding", "binary")
+	c.Header("Content-Disposition", "attachment; filename="+name)
+	c.Header("Content-Type", "application/octet-stream")
+	c.FileAttachment(target, name)
 }

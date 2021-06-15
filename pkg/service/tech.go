@@ -29,14 +29,18 @@ func (s *TechService) SelectAll() (packom.Select, error) {
 	return s.repo.SelectAll()
 }
 
-func (s *TechService) DeleteCost(tz_id int, task string) (int, error) {
-	return s.repo.DeleteCost(tz_id, task)
+func (s *TechService) DeleteCost(tz_id int, task, history string) (int, error) {
+	return s.repo.DeleteCost(tz_id, task, history)
 }
 
-func (s *TechService) DeleteCal(tz_id int, task string) (int, error) {
-	return s.repo.DeleteCal(tz_id, task)
+func (s *TechService) DeleteCal(tz_id int, task, history string) (int, error) {
+	return s.repo.DeleteCal(tz_id, task, history)
 }
 
 func (s *TechService) UpdateById(id int, input packom.Tech) (int, error) {
 	return s.repo.UpdateById(id, input)
+}
+
+func (s *TechService) AddTechDoc(name string, o_id, tz_id int) error {
+	return s.repo.AddTechDoc(name, o_id, tz_id)
 }

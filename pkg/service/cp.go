@@ -36,3 +36,7 @@ func (s *CPService) DeleteCal(id int) (int, error) {
 func (s *CPService) DeleteCst(id int) (int, error) {
 	return s.repo.DeleteCst(id)
 }
+
+func (s *CPService) AddCPDoc(name string, o_id, cp_id int) error {
+	return s.repo.AddCPDoc(name, o_id, cp_id)
+}

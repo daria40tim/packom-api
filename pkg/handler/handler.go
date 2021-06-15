@@ -65,6 +65,9 @@ func (h *Handler) InitRoutes() *gin.Engine {
 			orgs.GET("/:id", h.getOrgById)
 			orgs.PUT("/", h.updateOrgById)
 			orgs.PUT("/:id", h.addOrgById)
+			orgs.GET("/select", h.getSelectSpecs)
+			orgs.POST("/docs", h.getDocsById)
+			orgs.GET("/doc/:name/:id", h.getDoc)
 		}
 		techs := api.Group("/techs")
 		{
@@ -75,6 +78,8 @@ func (h *Handler) InitRoutes() *gin.Engine {
 			techs.GET("/select", h.getSelect)
 			techs.POST("/delete_cal", h.deleteCal)
 			techs.POST("/delete_cst", h.deleteCst)
+			techs.POST("/docs/:id", h.getTechDocsById)
+			techs.GET("/doc/:name/:id", h.getTechDoc)
 		}
 		cps := api.Group("/cps")
 		{
@@ -84,6 +89,8 @@ func (h *Handler) InitRoutes() *gin.Engine {
 			cps.PUT("/:id", h.updateCPById)
 			cps.POST("/delete_cal", h.cpDeleteCal)
 			cps.POST("/delete_cst", h.cpDeleteCst)
+			cps.POST("/docs/:id", h.getCpDocsById)
+			cps.GET("/doc/:name/:id", h.getCpDoc)
 		}
 		tenders := api.Group("/tenders")
 		{

@@ -5,7 +5,7 @@
 -- Dumped from database version 11.12
 -- Dumped by pg_dump version 11.12
 
--- Started on 2021-06-08 14:18:47
+-- Started on 2021-06-15 05:41:28
 
 SET statement_timeout = 0;
 SET lock_timeout = 0;
@@ -901,10 +901,7 @@ ALTER TABLE ONLY public."Tenders" ALTER COLUMN tender_id SET DEFAULT nextval('pu
 --
 
 COPY public."CP" (cp_id, date, tz_id, proj, o_id, pay_cond_id, end_date, info, history, cp_st) FROM stdin;
-19	2021-06-03	35	8	22	3	2021-10-03	a		1
-21	2021-06-08	36	11	22	1	2021-10-05	5000		1
-20	2021-06-03	35	8	4	2	2021-12-05	9		1
-22	2021-06-08	37	3	4	1	2021-11-21	0		1
+23	2021-06-14	45	8	22	1	2021-12-05	1	 \n Обновлен график: Разработка концепта длительностью 1 кн. Дата: 2021-06-15 \n Обновлен график: Изготовление серии длительностью 2 кн. Дата: 2021-06-15 \n Обновлена стоимость: Изготовление серии в количестве undefined undefined. Дата: 2021-06-15 \n Обновлена стоимость: Доставка в количестве undefined undefined. Дата: 2021-06-15 \n Обновлена стоимость: Единичный в количестве undefined undefined. Дата: 2021-06-15 \n Изменена конечная дата: 2021-12-05 Дата: 2021-06-15 \n Изменена общая информация: 1 Дата: 2021-06-15	1
 \.
 
 
@@ -915,10 +912,8 @@ COPY public."CP" (cp_id, date, tz_id, proj, o_id, pay_cond_id, end_date, info, h
 --
 
 COPY public."CP_docs" (file_name, cp_id, active) FROM stdin;
-1	20	t
-2	20	t
-1	22	t
-2	22	t
+1.docx	23	t
+pgadmin.log	23	t
 \.
 
 
@@ -965,6 +960,9 @@ COPY public."Calendar" (cal_id, name_id, period, term, tz_id, cp_id, active) FRO
 71	1	2	0	\N	21	t
 72	2	2	0	\N	21	t
 73	3	2	0	\N	21	t
+88	1	1	42	44	\N	t
+89	2	2	44	44	\N	t
+90	3	1	45	44	\N	t
 29	1	1	49	29	\N	f
 30	3	2	51	29	\N	f
 31	2	1	0	29	\N	t
@@ -982,6 +980,13 @@ COPY public."Calendar" (cal_id, name_id, period, term, tz_id, cp_id, active) FRO
 43	1	5	0	\N	17	t
 44	2	1	0	\N	17	t
 45	3	1	0	\N	17	t
+91	1	1	49	45	\N	f
+116	1	1	42	46	\N	t
+117	2	5	47	46	\N	t
+118	3	1	48	46	\N	t
+92	2	2	51	45	\N	f
+96	2	2	0	45	\N	f
+97	2	2	0	45	\N	f
 46	1	5	0	\N	18	f
 47	2	1	0	\N	18	f
 48	3	1	0	\N	18	f
@@ -999,6 +1004,13 @@ COPY public."Calendar" (cal_id, name_id, period, term, tz_id, cp_id, active) FRO
 59	2	2	0	\N	19	f
 64	2	2	0	\N	19	t
 65	3	3	0	\N	19	t
+99	1	2	0	45	\N	t
+95	3	1	0	45	\N	f
+100	3	1	0	45	\N	f
+107	2	3	0	45	\N	t
+93	1	0	0	\N	23	f
+94	2	1	0	\N	23	f
+98	3	1	0	\N	23	f
 60	2	2	0	\N	20	f
 62	2	0	0	\N	20	f
 63	3	3	0	\N	20	f
@@ -1012,6 +1024,20 @@ COPY public."Calendar" (cal_id, name_id, period, term, tz_id, cp_id, active) FRO
 85	3	4	0	\N	20	t
 86	1	1	0	\N	22	t
 87	3	1	0	\N	22	t
+101	3	0	0	\N	23	f
+102	1	1	0	\N	23	f
+103	3	3	0	\N	23	f
+104	3	1	0	\N	23	f
+105	1	2	0	\N	23	f
+106	3	1	0	\N	23	f
+108	1	1	0	\N	23	f
+109	2	2	0	\N	23	f
+110	1	2	0	\N	23	f
+111	2	3	0	\N	23	f
+112	1	1	0	\N	23	f
+113	2	2	0	\N	23	f
+114	1	1	0	\N	23	t
+115	2	2	0	\N	23	t
 \.
 
 
@@ -1026,6 +1052,16 @@ COPY public."Costs" (cost_id, metr_id, count, tz_id, cp_id, ppu, info, task_id, 
 29	\N	\N	\N	\N	50	1	1	\N	t
 30	\N	\N	\N	\N	1	1	3	\N	t
 31	\N	\N	\N	\N	1	1	1	\N	t
+43	\N	\N	\N	\N	170		2	\N	f
+50	\N	\N	\N	\N	100		2	\N	t
+51	\N	\N	\N	\N	80		1	\N	t
+52	\N	\N	\N	\N	5000		3	\N	t
+44	\N	\N	\N	\N	900		2	\N	f
+47	\N	\N	\N	\N	5000		2	\N	f
+48	\N	\N	\N	\N	250		1	\N	f
+49	\N	\N	\N	\N	600		3	\N	f
+64	\N	\N	\N	\N	500		2	\N	f
+65	\N	\N	\N	\N	200		1	\N	f
 15	1	120	\N	\N	\N		4	\N	t
 16	3	1	\N	\N	\N		2	\N	t
 17	1	1	\N	\N	\N		4	\N	t
@@ -1038,6 +1074,9 @@ COPY public."Costs" (cost_id, metr_id, count, tz_id, cp_id, ppu, info, task_id, 
 37	\N	\N	\N	\N	3000		3	\N	f
 38	\N	\N	\N	\N	500		1	\N	f
 39	\N	\N	\N	\N	3000		3	\N	f
+66	\N	\N	\N	\N	1		3	\N	f
+67	\N	\N	\N	\N	500		2	\N	f
+68	\N	\N	\N	\N	2		1	\N	f
 40	\N	\N	\N	\N	500		1	\N	t
 41	\N	\N	\N	\N	3000		3	\N	t
 2	1	150	\N	\N	\N		1	\N	t
@@ -1050,20 +1089,14 @@ COPY public."Costs" (cost_id, metr_id, count, tz_id, cp_id, ppu, info, task_id, 
 22	2	1	\N	\N	\N		3	\N	t
 23	2	1	\N	\N	\N		3	\N	t
 24	1	150	\N	\N	\N		1	\N	t
-42	1	1	35	\N	\N		2	\N	t
-45	1	150	35	\N	\N		1	\N	t
-46	2	2	35	\N	\N		3	\N	t
-58	\N	\N	\N	21	250		1	\N	t
-43	\N	\N	\N	19	170		2	\N	f
-50	\N	\N	\N	19	100		2	\N	t
-51	\N	\N	\N	19	80		1	\N	t
-52	\N	\N	\N	19	5000		3	\N	t
-53	1	30	36	\N	\N		1	\N	t
-54	2	2	36	\N	\N		3	\N	t
-55	1	150	37	\N	\N		1	\N	t
-56	1	1	37	\N	\N		2	\N	t
-57	2	2	37	\N	\N		3	\N	t
-59	\N	\N	\N	21	500		3	\N	t
+69	\N	\N	\N	\N	2		3	\N	f
+70	\N	\N	\N	\N	5		2	\N	f
+71	\N	\N	\N	\N	5		1	\N	f
+72	\N	\N	\N	\N	5		3	\N	f
+73	\N	\N	\N	\N	4		2	\N	t
+74	\N	\N	\N	\N	4		1	\N	t
+75	\N	\N	\N	\N	4		3	\N	t
+58	\N	\N	\N	\N	250		1	\N	t
 5	1	\N	\N	\N	150.00		1	\N	t
 6	2	\N	\N	\N	3000.00		3	\N	t
 7	1	\N	\N	\N	100.00		1	\N	t
@@ -1074,25 +1107,63 @@ COPY public."Costs" (cost_id, metr_id, count, tz_id, cp_id, ppu, info, task_id, 
 14	2	\N	\N	\N	5000.00		3	\N	t
 26	\N	\N	\N	\N	80		1	\N	t
 27	\N	\N	\N	\N	8000		3	\N	t
-44	\N	\N	\N	20	900		2	\N	f
-47	\N	\N	\N	20	5000		2	\N	f
-48	\N	\N	\N	20	250		1	\N	f
-49	\N	\N	\N	20	600		3	\N	f
-64	\N	\N	\N	20	500		2	\N	f
-65	\N	\N	\N	20	200		1	\N	f
-66	\N	\N	\N	20	1		3	\N	f
-67	\N	\N	\N	20	500		2	\N	f
-68	\N	\N	\N	20	2		1	\N	f
-69	\N	\N	\N	20	2		3	\N	f
-70	\N	\N	\N	20	5		2	\N	f
-71	\N	\N	\N	20	5		1	\N	f
-72	\N	\N	\N	20	5		3	\N	f
-73	\N	\N	\N	20	4		2	\N	t
-74	\N	\N	\N	20	4		1	\N	t
-75	\N	\N	\N	20	4		3	\N	t
-76	\N	\N	\N	22	500		1	\N	t
-77	\N	\N	\N	22	5		2	\N	t
-78	\N	\N	\N	22	1		3	\N	t
+59	\N	\N	\N	\N	500		3	\N	t
+76	\N	\N	\N	\N	500		1	\N	t
+77	\N	\N	\N	\N	5		2	\N	t
+78	\N	\N	\N	\N	1		3	\N	t
+55	1	150	\N	\N	\N		1	\N	t
+56	1	1	\N	\N	\N		2	\N	t
+57	2	2	\N	\N	\N		3	\N	t
+53	1	30	\N	\N	\N		1	\N	t
+54	2	2	\N	\N	\N		3	\N	t
+42	1	1	\N	\N	\N		2	\N	t
+45	1	150	\N	\N	\N		1	\N	t
+46	2	2	\N	\N	\N		3	\N	t
+79	1	10	\N	\N	\N		1	\N	t
+80	2	1	\N	\N	\N		3	\N	t
+100	2	1	45	\N	\N		3	\N	f
+97	2	1	45	\N	\N		3	\N	f
+82	2	1	45	\N	\N		3	\N	f
+87	2	1	45	\N	\N		3	\N	f
+81	1	80	45	\N	\N		1	\N	f
+91	4	50	45	\N	\N		1	\N	f
+92	1	50	45	\N	\N		1	\N	f
+94	1	80	45	\N	\N		1	\N	f
+98	1	50	45	\N	\N		1	\N	t
+96	1	1	45	\N	\N		2	\N	f
+88	1	1	45	\N	\N		2	\N	f
+85	1	1	45	\N	\N		2	\N	f
+86	1	1	45	\N	\N		2	\N	f
+90	1	1	45	\N	\N		2	\N	f
+89	2	1	45	\N	\N		3	\N	f
+95	2	1	45	\N	\N		3	\N	f
+99	2	1	45	\N	\N		3	\N	f
+102	2	1	45	\N	\N		3	\N	t
+103	1	1	45	\N	\N		2	\N	t
+93	1	1	45	\N	\N		2	\N	f
+83	\N	\N	\N	23	50		1	\N	f
+84	\N	\N	\N	23	5000		3	\N	f
+101	\N	\N	\N	23	500		1	\N	f
+104	\N	\N	\N	23	50		1	\N	f
+105	\N	\N	\N	23	3000		3	\N	f
+106	\N	\N	\N	23	500		2	\N	f
+107	\N	\N	\N	23	0		1	\N	f
+108	\N	\N	\N	23	0		3	\N	f
+109	\N	\N	\N	23	0		2	\N	f
+110	\N	\N	\N	23	500		1	\N	f
+111	\N	\N	\N	23	500		3	\N	f
+112	\N	\N	\N	23	500		2	\N	f
+113	\N	\N	\N	23	500		1	\N	f
+114	\N	\N	\N	23	500		3	\N	f
+115	\N	\N	\N	23	500		2	\N	f
+116	\N	\N	\N	23	50		1	\N	f
+117	\N	\N	\N	23	500		3	\N	f
+118	\N	\N	\N	23	10		2	\N	f
+119	\N	\N	\N	23	50		1	\N	t
+120	\N	\N	\N	23	1500		3	\N	t
+121	\N	\N	\N	23	15		2	\N	t
+122	1	250	46	\N	\N		1	\N	t
+123	2	1	46	\N	\N		3	\N	t
 \.
 
 
@@ -1103,9 +1174,12 @@ COPY public."Costs" (cost_id, metr_id, count, tz_id, cp_id, ppu, info, task_id, 
 --
 
 COPY public."Countries" (country_id, name) FROM stdin;
-1	'Россия'
-2	Беларусь
 0	?
+4	Украина
+2	Беларусь
+1	Россия
+5	Азербайджан
+7	Украина
 \.
 
 
@@ -1120,6 +1194,7 @@ COPY public."Metrics" (metr_id, name) FROM stdin;
 2	рейс
 0	
 3	tb
+4	Изготовление серии
 \.
 
 
@@ -1139,6 +1214,11 @@ COPY public."Org_countries" (o_id, country_id) FROM stdin;
 21	0
 22	0
 23	0
+24	0
+25	0
+28	4
+29	5
+31	7
 \.
 
 
@@ -1149,13 +1229,14 @@ COPY public."Org_countries" (o_id, country_id) FROM stdin;
 --
 
 COPY public."Orgs" (o_id, name, group_id, site, phone, email, adress, info, login, hashed_pwd, status, history) FROM stdin;
-8	Организация 4\n	1	poga_i_kopyta.ru	8 800 555 35 35	mail@mail.ru	ул. Циолковского, 1a	?	daria40tim@gmail.com	6577697275666871703369393437383561736466a0f1490a20d0211c997b44bc357e1972deab8ae3	f	\N
+22	2	2	1	+7 919 037 04 81	daria	ул. Николо		2	6577697275666871703369393437383561736466da4b9237bacccdf19c0760cab7aec4a8359010b0	f	 \n Изменена специализация: Металлоконтейнеры Дата: 2021-06-14  \n Изменена специализация: Металлокерамика Дата: 2021-06-14  \n Изменен адрес: ул. Николо Дата: 2021-06-14  \n Изменен адрес: ул. Николо-Козинская Дата: 2021-06-14 \n Изменен телефон: +7 919 037 04 81 Дата: 2021-06-14 \n Изменен адрес электронной почты: daria Дата: 2021-06-14 \n Изменен сайт: 1 Дата: 2021-06-14 1
+8	Организация 4\n	1	poga_i_kopyta.ru	8 800 555 35 35	mail@mail.ru	ул. Циолковского, 1a	?	daria40tim@gmail.com	6577697275666871703369393437383561736466a0f1490a20d0211c997b44bc357e1972deab8ae3	f	&
+4	'Организация 1'	3	mysite.com	533286	daria140tim@gmail.com	ул. Николо		daria	657769727566687170336939343738356173646687920921c770b54d62fd553645a7fc579e1a9a7f	f	6
+21	1	1	сайт	+7 919 037 04 81	daria40tim@gmail.com	ул. Николо-Козинская		1	6577697275666871703369393437383561736466356a192b7913b04c54574d18c28d46e6395428ab	f	 \n Изменен сайт: сайт Дата: 2021-06-14  \n Изменен сайт: 8 Дата: 2021-06-14
+31	5	3						5	6577697275666871703369393437383561736466ac3478d69a3c81fa62e60f5c3696165a4e5e6ac4	f	
 10	Организация 10	1	main.com	+79190385798	mail@gmail.com	Адрес	?	?	?	f	
 11	Организация 11	1	main.com	+79190385798	mail@gmail.com	Адрес	?	?	?	f	
 13	Организация 13	2	main.com	+79190385798	mail@gmail.com	Адрес	?	?	?	f	
-21	1	1						1	6577697275666871703369393437383561736466356a192b7913b04c54574d18c28d46e6395428ab	f	
-22	2	2						2	6577697275666871703369393437383561736466da4b9237bacccdf19c0760cab7aec4a8359010b0	f	
-4	'Организация 1'	3	mysite.com	533286	daria140tim@gmail.com	ул. Николо		daria	657769727566687170336939343738356173646687920921c770b54d62fd553645a7fc579e1a9a7f	f	\N
 23	3	1						3	657769727566687170336939343738356173646677de68daecd823babbb58edb1c8e14d7106e83bb	f	
 \.
 
@@ -1167,8 +1248,14 @@ COPY public."Orgs" (o_id, name, group_id, site, phone, email, adress, info, logi
 --
 
 COPY public."Orgs_docs" (doc_id, file_path, file_name, o_id) FROM stdin;
-1	D:\\packom	Устав.pdf	4
-2	D:\\packom	Пример.doc	4
+3		1.txt	31
+4		1.txt	31
+5		Dz.docx	31
+1	D:\\packom	Ustav.pdf	4
+2	D:\\packom	Example.doc	4
+6		1.docx	4
+7		1.docx	21
+8		pgadmin.log	21
 \.
 
 
@@ -1202,10 +1289,14 @@ COPY public."Orgs_specs" (o_id, spec_id) FROM stdin;
 11	3
 19	0
 20	0
-21	0
-22	0
-4	5
 23	0
+24	0
+25	0
+4	0
+30	0
+31	1
+22	3
+21	2
 \.
 
 
@@ -1276,7 +1367,6 @@ COPY public."Specs" (spec_id, name) FROM stdin;
 2	Металлокерамика
 3	Металлоконтейнеры
 0	?
-5	
 \.
 
 
@@ -1324,6 +1414,8 @@ COPY public."Tech_docs" (tz_id, file_name, active) FROM stdin;
 43	2	t
 36	1.doc	t
 36	2.doc	t
+45	1.docx	t
+45	pgadmin.log	t
 \.
 
 
@@ -1334,9 +1426,8 @@ COPY public."Tech_docs" (tz_id, file_name, active) FROM stdin;
 --
 
 COPY public."Techs" (date, o_id, end_date, proj, group_id, kind_id, type_id, tender_st, cp_st, pay_cond_id, private, info, history, tz_id, task_name, active, tz_st, selected_cp) FROM stdin;
-2021-06-07	23	2021-12-04	3	3	1	1	0	0	1	f			37	Изготовление серии	t	0	0
-2021-06-04	4	2021-12-03	11	1	1	1	0	0	1	f	s		36	Изготовление серии	f	4	0
-2021-06-03	21	2021-12-05	8	3	2	1	0	0	1	f	q	 \n Изменена конечная дата: null	35	Изготовление серии	t	0	19
+2021-06-14	4	2021-12-05	12	2	1	2	0	0	3	f		 \n Добавлен график: Изготовление серии длительностью 3 кн. Дата: 2021-06-15 \n Добавлен график: Разработка концепта длительностью 2 кн. Дата: 2021-06-15 \n Добавлен график: Доставка длительностью 1 кн. Дата: 2021-06-15 \n Добавлена стоимость: Доставка в количестве 1 рейс. Дата: 2021-06-15 \n Добавлена стоимость: Единичный в количестве 1 шт.. Дата: 2021-06-15 \n Добавлена стоимость: Доставка в количестве 1 рейс. Дата: 2021-06-15 \n Добавлена стоимость: Доставка в количестве 1 рейс. Дата: 2021-06-15 \n Добавлена стоимость: Изготовление серии в количестве 50 шт.. Дата: 2021-06-15 \n 	45	Изготовление серии	t	0	0
+2021-06-15	21	2021-10-15	13	3	1	1	0	0	3	t			46	Изготовление серии	t	0	0
 \.
 
 
@@ -1347,9 +1438,8 @@ COPY public."Techs" (date, o_id, end_date, proj, group_id, kind_id, type_id, ten
 --
 
 COPY public."Tenders" (tender_id, date, selected_cp, tz_id, history) FROM stdin;
-6	2021-12-03	0	36	
-7	2021-12-04	0	37	
-5	2021-12-05	19	35	
+14	2021-12-03	0	45	
+15	2021-10-15	0	46	
 \.
 
 
@@ -1359,7 +1449,7 @@ COPY public."Tenders" (tender_id, date, selected_cp, tz_id, history) FROM stdin;
 -- Name: CP_cp_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
 --
 
-SELECT pg_catalog.setval('public."CP_cp_id_seq"', 22, true);
+SELECT pg_catalog.setval('public."CP_cp_id_seq"', 23, true);
 
 
 --
@@ -1368,7 +1458,7 @@ SELECT pg_catalog.setval('public."CP_cp_id_seq"', 22, true);
 -- Name: Calendar_cal_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
 --
 
-SELECT pg_catalog.setval('public."Calendar_cal_id_seq"', 87, true);
+SELECT pg_catalog.setval('public."Calendar_cal_id_seq"', 118, true);
 
 
 --
@@ -1377,7 +1467,7 @@ SELECT pg_catalog.setval('public."Calendar_cal_id_seq"', 87, true);
 -- Name: Costs_cost_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
 --
 
-SELECT pg_catalog.setval('public."Costs_cost_id_seq"', 78, true);
+SELECT pg_catalog.setval('public."Costs_cost_id_seq"', 123, true);
 
 
 --
@@ -1386,7 +1476,7 @@ SELECT pg_catalog.setval('public."Costs_cost_id_seq"', 78, true);
 -- Name: Countries_country_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
 --
 
-SELECT pg_catalog.setval('public."Countries_country_id_seq"', 1, false);
+SELECT pg_catalog.setval('public."Countries_country_id_seq"', 7, true);
 
 
 --
@@ -1395,7 +1485,7 @@ SELECT pg_catalog.setval('public."Countries_country_id_seq"', 1, false);
 -- Name: Metrics_metr_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
 --
 
-SELECT pg_catalog.setval('public."Metrics_metr_id_seq"', 3, true);
+SELECT pg_catalog.setval('public."Metrics_metr_id_seq"', 4, true);
 
 
 --
@@ -1404,7 +1494,7 @@ SELECT pg_catalog.setval('public."Metrics_metr_id_seq"', 3, true);
 -- Name: Orgs_docs_doc_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
 --
 
-SELECT pg_catalog.setval('public."Orgs_docs_doc_id_seq"', 1, false);
+SELECT pg_catalog.setval('public."Orgs_docs_doc_id_seq"', 8, true);
 
 
 --
@@ -1413,7 +1503,7 @@ SELECT pg_catalog.setval('public."Orgs_docs_doc_id_seq"', 1, false);
 -- Name: Orgs_o_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
 --
 
-SELECT pg_catalog.setval('public."Orgs_o_id_seq"', 23, true);
+SELECT pg_catalog.setval('public."Orgs_o_id_seq"', 31, true);
 
 
 --
@@ -1485,7 +1575,7 @@ SELECT pg_catalog.setval('public."Tasks_task_id_seq"', 5, true);
 -- Name: Techs_tz_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
 --
 
-SELECT pg_catalog.setval('public."Techs_tz_id_seq"', 43, true);
+SELECT pg_catalog.setval('public."Techs_tz_id_seq"', 46, true);
 
 
 --
@@ -1494,7 +1584,7 @@ SELECT pg_catalog.setval('public."Techs_tz_id_seq"', 43, true);
 -- Name: Tenders_tender_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
 --
 
-SELECT pg_catalog.setval('public."Tenders_tender_id_seq"', 12, true);
+SELECT pg_catalog.setval('public."Tenders_tender_id_seq"', 15, true);
 
 
 --
@@ -1803,7 +1893,7 @@ ALTER TABLE ONLY public."CP"
     ADD CONSTRAINT tz_fk FOREIGN KEY (tz_id) REFERENCES public."Techs"(tz_id) ON UPDATE CASCADE ON DELETE SET NULL NOT VALID;
 
 
--- Completed on 2021-06-08 14:18:48
+-- Completed on 2021-06-15 05:41:28
 
 --
 -- PostgreSQL database dump complete

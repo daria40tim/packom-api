@@ -59,3 +59,35 @@ func (h *Handler) signIn(c *gin.Context) {
 	})
 
 }
+
+type getCountriesResponse struct {
+	Data packom.Countries `json:"data"`
+}
+
+func (h *Handler) getSelectCountries(c *gin.Context) {
+
+	data, err := h.services.Authorization.SelectAllCountries()
+	if err != nil {
+		newErrorResponse(c, http.StatusInternalServerError, err.Error())
+		return
+	}
+
+	c.JSON(http.StatusOK, getCountriesResponse{
+		Data: data,
+	})
+
+}
+
+func (h *Handler) getSelectLogin(c *gin.Context) {
+
+	data, err := h.services.Authorization.SelectLogin("1")
+	if err != nil {
+		newErrorResponse(c, http.StatusInternalServerError, err.Error())
+		return
+	}
+
+	c.JSON(http.StatusOK, getCountriesResponse{
+		Data: data,
+	})
+
+}

@@ -72,9 +72,17 @@ func (s *AuthService) ParseToken(accessToken string) (int, error) {
 	return claims.OId, nil
 }
 
+func (s *AuthService) SelectAllCountries() (packom.Countries, error) {
+	return s.repo.SelectAllCountries()
+}
+
 func generatePasswordHash(password string) string {
 	hash := sha1.New()
 	hash.Write([]byte(password))
 
 	return fmt.Sprintf("%x", hash.Sum([]byte(salt)))
+}
+
+func (s *AuthService) SelectLogin(input string) (packom.Countries, error) {
+	return s.repo.SelectLogin(input)
 }

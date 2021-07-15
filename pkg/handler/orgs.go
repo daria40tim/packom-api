@@ -182,3 +182,43 @@ func (h *Handler) getDoc(c *gin.Context) {
 	c.Header("Content-Type", "application/octet-stream")
 	c.FileAttachment(target, name)
 }
+
+func (h *Handler) deleteTrusted(c *gin.Context) {
+	O_Id, err := getOId(c)
+	if err != nil {
+		return
+	}
+
+	id, err := strconv.Atoi(c.Param("id"))
+	if err != nil {
+		newErrorResponse(c, http.StatusBadRequest, "invalid id param")
+		return
+	}
+
+	err = h.services.Org.DeleteTrustedOrg(O_Id, id)
+	if err != nil {
+		newErrorResponse(c, http.StatusInternalServerError, err.Error())
+		return
+	}
+
+	c.JSON(http.StatusOK, map[string]interface{}{
+		"o_id": O_Id,
+	})
+}
+
+type getOrgFilterResponse struct {
+	Data packom.OrgFilterData `json:"data"`
+}
+
+func (h *Handler) getFilterData(c *gin.Context) {
+
+	filters, err := h.services.Org.GetFilterData()
+	if err != nil {
+		newErrorResponse(c, http.StatusInternalServerError, err.Error())
+		return
+	}
+
+	c.JSON(http.StatusOK, getOrgFilterResponse{
+		Data: filters,
+	})
+}

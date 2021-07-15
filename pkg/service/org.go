@@ -39,3 +39,11 @@ func (s *OrgService) SelectAllSpecs() (packom.Specs, error) {
 func (s *OrgService) AddDoc(name string, o_id int) error {
 	return s.repo.AddDoc(name, o_id)
 }
+
+func (s *OrgService) DeleteTrustedOrg(O_Id, id int) error {
+	return s.repo.DeleteTrustedOrg(O_Id, id)
+}
+
+func (s *OrgService) GetFilterData() (packom.OrgFilterData, error) {
+	return s.repo.GetFilterData()
+}

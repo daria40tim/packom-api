@@ -9,6 +9,8 @@ type Authorization interface {
 	CreateOrg(org packom.Org) (int, error)
 	GenerateToken(login, pwd string) (string, error, packom.Org)
 	ParseToken(token string) (int, error)
+	SelectAllCountries() (packom.Countries, error)
+	SelectLogin(input string) (packom.Countries, error)
 }
 
 type CP interface {
@@ -47,6 +49,8 @@ type Org interface {
 	AddById(O_Id, input int) (int, error)
 	SelectAllSpecs() (packom.Specs, error)
 	AddDoc(name string, o_id int) error
+	DeleteTrustedOrg(O_Id, id int) error
+	GetFilterData() (packom.OrgFilterData, error)
 }
 
 type Service struct {

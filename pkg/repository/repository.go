@@ -8,6 +8,8 @@ import (
 type Autherization interface {
 	CreateOrg(org packom.Org) (int, error)
 	GetOrg(login, pwd string) (packom.Org, error)
+	SelectAllCountries() (packom.Countries, error)
+	SelectLogin(input string) (packom.Countries, error)
 }
 
 type Org interface {
@@ -17,6 +19,8 @@ type Org interface {
 	AddById(O_Id int, input int) (int, error)
 	SelectAllSpecs() (packom.Specs, error)
 	AddDoc(name string, o_id int) error
+	DeleteTrustedOrg(O_Id, id int) error
+	GetFilterData() (packom.OrgFilterData, error)
 }
 
 type CP interface {

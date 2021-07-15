@@ -54,6 +54,8 @@ func (h *Handler) InitRoutes() *gin.Engine {
 	{
 		auth.POST("/sign-up", h.signUp)
 		auth.POST("/sign-in", h.signIn)
+		auth.GET("/countries", h.getSelectCountries)
+		auth.GET("/login", h.getSelectLogin)
 	}
 
 	api := router.Group("/api", h.orgIdentity)
@@ -68,6 +70,8 @@ func (h *Handler) InitRoutes() *gin.Engine {
 			orgs.GET("/select", h.getSelectSpecs)
 			orgs.POST("/docs", h.getDocsById)
 			orgs.GET("/doc/:name/:id", h.getDoc)
+			orgs.GET("/delete/:id", h.deleteTrusted)
+			orgs.GET("/filter", h.getFilterData)
 		}
 		techs := api.Group("/techs")
 		{

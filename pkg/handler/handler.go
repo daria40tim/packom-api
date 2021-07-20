@@ -72,6 +72,7 @@ func (h *Handler) InitRoutes() *gin.Engine {
 			orgs.GET("/doc/:name/:id", h.getDoc)
 			orgs.GET("/delete/:id", h.deleteTrusted)
 			orgs.GET("/filter", h.getFilterData)
+			orgs.POST("/job/", h.getFilteredOrgs)
 		}
 		techs := api.Group("/techs")
 		{

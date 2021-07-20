@@ -43,7 +43,7 @@ type Tech interface {
 }
 
 type Org interface {
-	GetAll(O_Id int /*filter packom.TechFilter*/) ([]packom.OrgAll, error)
+	GetAll(O_Id int) ([]packom.OrgAll, error)
 	GetById(O_Id, o_id int) (packom.OrgId, error)
 	UpdateById(O_Id int, input packom.OrgI) (int, error)
 	AddById(O_Id, input int) (int, error)
@@ -51,6 +51,7 @@ type Org interface {
 	AddDoc(name string, o_id int) error
 	DeleteTrustedOrg(O_Id, id int) error
 	GetFilterData() (packom.OrgFilterData, error)
+	GetAllFiltered(O_Id int, names, groups, specs, countries []int) ([]packom.OrgAll, error)
 }
 
 type Service struct {

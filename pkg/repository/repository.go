@@ -21,6 +21,7 @@ type Org interface {
 	AddDoc(name string, o_id int) error
 	DeleteTrustedOrg(O_Id, id int) error
 	GetFilterData() (packom.OrgFilterData, error)
+	GetAllFiltered(O_Id int, names, groups, specs, countries []int) ([]packom.OrgAll, error)
 }
 
 type CP interface {

@@ -222,3 +222,26 @@ func (h *Handler) getFilterData(c *gin.Context) {
 		Data: filters,
 	})
 }
+
+func (h *Handler) getFilteredOrgs(c *gin.Context) {
+	O_Id, err := getOId(c)
+	if err != nil {
+		return
+	}
+
+	var input packom.OrgFilterParams
+	if err := c.BindJSON(&input); err != nil {
+		newErrorResponse(c, http.StatusBadRequest, err.Error())
+		return
+	}
+
+	techs, err := h.services.Org.GetAllFiltered(O_Id, input.Names, input.Groups, input.Specs, input.Countries)
+	if err != nil {
+		newErrorResponse(c, http.StatusInternalServerError, err.Error())
+		return
+	}
+
+	c.JSON(http.StatusOK, getAllOrgsResponse{
+		Data: techs,
+	})
+}

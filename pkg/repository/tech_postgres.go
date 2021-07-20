@@ -281,7 +281,7 @@ func (r *TechPostgres) GetById(O_Id, tz_id int) (packom.Tech, []packom.Cost, []p
 }
 
 func (r *TechPostgres) SelectAll() (packom.Select, error) {
-	var metrics, groups, kinds, types, pay_conds, task_names, tasks []string
+	var metrics, groups, kinds, types, pay_conds, task_names, tasks, task_kinds []string
 	var res packom.Select
 
 	query := `SELECT name FROM public."Metrics"`
@@ -332,6 +332,14 @@ func (r *TechPostgres) SelectAll() (packom.Select, error) {
 	if err != nil {
 		return res, err
 	}
+
+	query = `SELECT name FROM public."Task_kinds"`
+
+	err = r.db.Select(&task_kinds, query)
+	if err != nil {
+		return res, err
+	}
+
 	res.Groups = groups
 	res.Kinds = kinds
 	res.Metrics = metrics
@@ -339,6 +347,7 @@ func (r *TechPostgres) SelectAll() (packom.Select, error) {
 	res.Task_names = task_names
 	res.Tasks = tasks
 	res.Types = types
+	res.Task_kinds = task_kinds
 
 	return res, nil
 }

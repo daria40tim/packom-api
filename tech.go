@@ -55,4 +55,5 @@ type Select struct {
 	Pay_conds  []string `json:"pay_conds"`
 	Task_names []string `json:"task_names"`
 	Tasks      []string `json:"tasks"`
+	Task_kinds []string `json:"task_kinds"`
 }

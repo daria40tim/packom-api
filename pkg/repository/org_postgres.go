@@ -1,6 +1,8 @@
 package repository
 
 import (
+	"strconv"
+
 	"github.com/daria40tim/packom"
 	"github.com/jmoiron/sqlx"
 )
@@ -353,4 +355,82 @@ func (r *OrgPostgres) GetFilterData() (packom.OrgFilterData, error) {
 	res.Specs = specs
 
 	return res, nil
+}
+
+func (r *OrgPostgres) GetAllFiltered(O_Id int, names, groups, specs, countries []int) ([]packom.OrgAll, error) {
+	var techs []packom.OrgAll
+
+	query := `SELECT public."Orgs".name, public."Orgs".o_id, case group_id when 1 then 'Клиент' when 2 then 'Поставщик' else 'Клиент, Поставщик' end as group, site, phone, email, public."Countries".name as countries
+	FROM public."Orgs"
+	left join public."Org_countries" on public."Orgs".o_id=public."Org_countries".o_id
+	left join public."Countries" on public."Countries".country_id=public."Org_countries".country_id`
+
+	if len(names) == 0 {
+		query += ` where public."Orgs".o_id in (select o_id from public."Orgs") `
+	} else {
+		query += ` where public."Orgs".o_id in ( ` + strconv.Itoa(names[0])
+		for i := 1; i < len(names); i++ {
+			query += `, ` + strconv.Itoa(names[i])
+		}
+		query += `)`
+	}
+
+	if len(groups) == 0 {
+		query += ` and public."Orgs".group_id in (select group_id from public."Orgs") `
+	} else {
+		query += ` and public."Orgs".group_id in ( ` + strconv.Itoa(groups[0])
+		for i := 1; i < len(groups); i++ {
+			query += `, ` + strconv.Itoa(groups[i])
+		}
+		query += `)`
+	}
+	if len(countries) == 0 {
+		query += ` and public."Org_countries".country_id in (select  public."Org_countries".country_id from public."Org_countries") `
+	} else {
+		query += ` and public."Org_countries".country_id in ( ` + strconv.Itoa(countries[0])
+		for i := 1; i < len(countries); i++ {
+			query += `, ` + strconv.Itoa(countries[i])
+		}
+		query += `)`
+	}
+	if len(specs) == 0 {
+		query += ``
+	} else {
+		query += ` and public."Orgs".o_id in ( SELECT o_id FROM public."Orgs_specs" where spec_id in ( ` + strconv.Itoa(specs[0])
+		for i := 1; i < len(specs); i++ {
+			query += `, ` + strconv.Itoa(specs[i])
+		}
+		query += `) and active)`
+	}
+
+	if err := r.db.Select(&techs, query); err != nil {
+		return nil, err
+	}
+
+	for i, v := range techs {
+		var specs []string
+		var spec string
+
+		query = `SELECT name
+		FROM public."Orgs_specs"
+		join public."Specs" on public."Specs".spec_id = public."Orgs_specs".spec_id
+		where o_id = $1 and active`
+
+		if err := r.db.Select(&specs, query, v.O_id); err != nil {
+			return nil, err
+		}
+
+		if len(specs) > 1 {
+			spec = specs[0]
+			for i := 1; i < len(specs); i++ {
+				spec = spec + ", " + specs[i]
+			}
+		} else if len(specs) > 0 {
+			spec = specs[0]
+		}
+
+		techs[i].Specs = spec
+	}
+
+	return techs, nil
 }

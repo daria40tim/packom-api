@@ -67,6 +67,17 @@ type OrgI struct {
 	Docs      []string `json:"docs"`
 }
 
+type OrgFiltered struct {
+	O_id      int    `json:"o_id" db:"o_id"`
+	Name      string `json:"name" db:"name"`
+	Group     string `json:"group" db:"group"`
+	Specs     string `json:"spec" db:"specs"`
+	Countries string `json:"country" db:"countries"`
+	Site      string `json:"site" db:"site"`
+	Phone     string `json:"phone" db:"phone"`
+	Email     string `json:"email" db:"email"`
+}
+
 type Specs struct {
 	Specs []string `json:"specs"`
 }
@@ -91,7 +102,7 @@ type OrgFilterData struct {
 }
 
 type NameFilter struct {
-	Id   int    `db:"o_id" json:"o_id"`
+	Id   int    `db:"o_id" json:"id"`
 	Name string `db:"name" json:"name"`
 }
 
@@ -103,4 +114,11 @@ type CountryFilter struct {
 type SpecFilter struct {
 	Id   int    `db:"spec_id" json:"id"`
 	Spec string `db:"name" json:"name"`
+}
+
+type OrgFilterParams struct {
+	Names     []int `json:"names"`
+	Groups    []int `json:"groups"`
+	Specs     []int `json:"specs"`
+	Countries []int `json:"countries"`
 }

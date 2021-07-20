@@ -47,3 +47,7 @@ func (s *OrgService) DeleteTrustedOrg(O_Id, id int) error {
 func (s *OrgService) GetFilterData() (packom.OrgFilterData, error) {
 	return s.repo.GetFilterData()
 }
+
+func (s *OrgService) GetAllFiltered(O_Id int, names, groups, specs, countries []int) ([]packom.OrgAll, error) {
+	return s.repo.GetAllFiltered(O_Id, names, groups, specs, countries)
+}

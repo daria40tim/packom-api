@@ -33,13 +33,15 @@ type Tender interface {
 
 type Tech interface {
 	Create(O_Id int, tech packom.Tech) (int, error)
-	GetAll(O_Id int) (packom.TechAllCP, error)
+	GetAll(O_Id int) ([]packom.TechAll, error)
 	GetById(O_Id, tz_id int) (packom.Tech, []packom.Cost, []packom.Calendar, error)
 	SelectAll() (packom.Select, error)
 	DeleteCost(tz_id int, task, h string) (int, error)
 	DeleteCal(tz_id int, task, h string) (int, error)
 	UpdateById(id int, input packom.Tech) (int, error)
 	AddTechDoc(name string, o_id, tz_id int) error
+	GetFilterData() (packom.TechFilterData, error)
+	GetAllTechsFiltered(O_Id int, EDate, SDate string, Clients, Projs, TZ_STS, CP_STS, Tender_STS []int) ([]packom.TechAll, error)
 }
 
 type Org interface {

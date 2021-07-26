@@ -62,7 +62,6 @@ func (h *Handler) InitRoutes() *gin.Engine {
 	{
 		orgs := api.Group("/orgs")
 		{
-			//orgs.POST("/", h.createOrg)
 			orgs.GET("/", h.getAllOrgs)
 			orgs.GET("/:id", h.getOrgById)
 			orgs.PUT("/", h.updateOrgById)
@@ -79,12 +78,14 @@ func (h *Handler) InitRoutes() *gin.Engine {
 			techs.POST("/", h.createTech)
 			techs.GET("/", h.getAllTechs)
 			techs.GET("/:id", h.getTechById)
-			techs.PUT("/:id", h.updateTechById)
+			techs.POST("/:id", h.updateTechById)
 			techs.GET("/select", h.getSelect)
 			techs.POST("/delete_cal", h.deleteCal)
 			techs.POST("/delete_cst", h.deleteCst)
 			techs.POST("/docs/:id", h.getTechDocsById)
 			techs.GET("/doc/:name/:id", h.getTechDoc)
+			techs.GET("/filter", h.getTechFilterData)
+			techs.POST("/job/", h.getFilteredTechs)
 		}
 		cps := api.Group("/cps")
 		{

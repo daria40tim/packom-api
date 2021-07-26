@@ -16,12 +16,12 @@ func NewCPPostgres(db *sqlx.DB) *CPPostgres {
 	return &CPPostgres{db: db}
 }
 
-func (r *CPPostgres) GetAll(O_Id int /*, filter packom.TechFilter*/) ([]packom.CPAll, error) {
+func (r *CPPostgres) GetAll(O_Id int) ([]packom.CPAll, error) {
 	var techs []packom.CPAll
 
-	query := `SELECT cp_id, public."CP".date, case public."CP".cp_st when 1 then 'Обрабатывается' when 2 then 'Принято' when 3 then 'Отклонено' end as cp_st, 
-	public."CP".tz_id, public."CP".proj, public."CP".o_id, public."Orgs".name as client, public."Pack_groups".name as group, 
-	public."Pack_types".name as type, public."Pack_kinds".name as kind, public."Techs".task_name as task_name  
+	query := `SELECT cp_id, public."CP".date, public."CP".tz_id, public."CP".proj, public."CP".o_id, public."Orgs".name as client, public."Pack_groups".name as group, 
+	public."Pack_types".name as type, public."Pack_kinds".name as kind, public."Techs".task_name as task_name, public."Techs".active, 
+	public."Techs".selected_cp 
 	FROM public."CP" join public."Orgs" on public."Orgs".o_id=public."CP".o_id 
 	join public."Techs" on public."Techs".tz_id=public."CP".tz_id
 	join public."Pack_groups" on public."Pack_groups".group_id=public."Techs".group_id
@@ -30,6 +30,18 @@ func (r *CPPostgres) GetAll(O_Id int /*, filter packom.TechFilter*/) ([]packom.C
 	where public."CP".o_id =$1;`
 
 	err := r.db.Select(&techs, query, O_Id)
+
+	for i, v := range techs {
+		if v.Selected_cp == v.Cp_id {
+			techs[i].Cp_st = "Принято"
+		} else if v.Selected_cp != v.Cp_id && v.Selected_cp != "0" {
+			techs[i].Cp_st = "Отклонено"
+		} else if v.Selected_cp == "0" {
+			techs[i].Cp_st = "Активно"
+		} else {
+			techs[i].Cp_st = "Архив"
+		}
+	}
 
 	return techs, err
 }

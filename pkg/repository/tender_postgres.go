@@ -2,6 +2,7 @@ package repository
 
 import (
 	"fmt"
+	"time"
 
 	"github.com/daria40tim/packom"
 	"github.com/jmoiron/sqlx"
@@ -29,8 +30,8 @@ func (r *TenderPostgres) Create(O_Id int, tender packom.Tender) (int, error) {
 
 func (r *TenderPostgres) GetAll(O_Id int) ([]packom.TenderAll, error) {
 	var techs []packom.TenderAll
-	query := `SELECT tender_id, public."Tenders".date, public."Techs".selected_cp, public."Techs".proj , public."Tenders".tz_id, public."Techs".tz_st, public."Techs".task_name as task,
-	public."Pack_groups".name as group, public."Pack_types".name as type, public."Pack_kinds".name as kind
+	query := `SELECT tender_id, public."Techs".end_date as date, public."Techs".selected_cp, public."Techs".proj , public."Tenders".tz_id, public."Techs".tz_st, public."Techs".task_name as task,
+	public."Pack_groups".name as group, public."Pack_types".name as type, public."Pack_kinds".name as kind, public."Techs".active
 	   FROM public."Tenders"
 	   join public."Techs" on public."Tenders".tz_id = public."Techs".tz_id
 	   join public."Pack_groups" on public."Pack_groups".group_id=public."Techs".group_id 
@@ -41,6 +42,24 @@ func (r *TenderPostgres) GetAll(O_Id int) ([]packom.TenderAll, error) {
 	err := r.db.Select(&techs, query, O_Id)
 	if err != nil {
 		return nil, err
+	}
+
+	now := time.Now()
+
+	for i, v := range techs {
+		date, err := time.Parse(time.RFC3339, v.Date)
+		if err != nil {
+			return nil, err
+		}
+		if !v.Active {
+			techs[i].Tender_st = "Отменен"
+		} else if v.Active && v.Selected_cp != 0 {
+			techs[i].Tender_st = "Архив"
+		} else if now.Sub(date) > 0 {
+			techs[i].Tender_st = "Ожидает решения"
+		} else {
+			techs[i].Tender_st = "Сбор КП"
+		}
 	}
 
 	return techs, err

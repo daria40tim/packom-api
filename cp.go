@@ -63,17 +63,19 @@ type CPId struct {
 }
 
 type CPAll struct {
-	Cp_id     string `json:"cp_id" db:"cp_id"`
-	Date      string `json:"date" db:"date"`
-	Cp_st     string `json:"cp_st" db:"cp_st"`
-	Tz_id     int    `json:"tz_id" db:"tz_id"`
-	Proj      string `json:"proj" db:"proj"`
-	Client    string `json:"client" db:"client"`
-	O_id      int    `json:"o_id" db:"o_id"`
-	Group     string `json:"group" db:"group"`
-	Type      string `json:"type" db:"type"`
-	Kind      string `json:"kind" db:"kind"`
-	Task_name string `json:"task_name" db:"task_name"`
+	Cp_id       string `json:"cp_id" db:"cp_id"`
+	Date        string `json:"date" db:"date"`
+	Cp_st       string `json:"cp_st" db:"cp_st"`
+	Tz_id       int    `json:"tz_id" db:"tz_id"`
+	Proj        string `json:"proj" db:"proj"`
+	Client      string `json:"client" db:"client"`
+	O_id        int    `json:"o_id" db:"o_id"`
+	Group       string `json:"group" db:"group"`
+	Type        string `json:"type" db:"type"`
+	Kind        string `json:"kind" db:"kind"`
+	Task_name   string `json:"task_name" db:"task_name"`
+	Active      bool   ` db:"active"`
+	Selected_cp string `db:"selected_cp"`
 }
 
 type CP_srv struct {

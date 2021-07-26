@@ -17,8 +17,8 @@ func (s *TechService) Create(O_Id int, tech packom.Tech) (int, error) {
 	return s.repo.Create(O_Id, tech)
 }
 
-func (s *TechService) GetAll(O_Id int /*filter packom.TechFilter*/) (packom.TechAllCP, error) {
-	return s.repo.GetAll(O_Id /*filter*/)
+func (s *TechService) GetAll(O_Id int) ([]packom.TechAll, error) {
+	return s.repo.GetAll(O_Id)
 }
 
 func (s *TechService) GetById(O_Id, tz_id int) (packom.Tech, []packom.Cost, []packom.Calendar, error) {
@@ -43,4 +43,12 @@ func (s *TechService) UpdateById(id int, input packom.Tech) (int, error) {
 
 func (s *TechService) AddTechDoc(name string, o_id, tz_id int) error {
 	return s.repo.AddTechDoc(name, o_id, tz_id)
+}
+
+func (s *TechService) GetFilterData() (packom.TechFilterData, error) {
+	return s.repo.GetFilterData()
+}
+
+func (s *TechService) GetAllTechsFiltered(O_Id int, EDate, SDate string, Clients, Projs, TZ_STS, CP_STS, Tender_STS []int) ([]packom.TechAll, error) {
+	return s.repo.GetAllTechsFiltered(O_Id, EDate, SDate, Clients, Projs, TZ_STS, CP_STS, Tender_STS)
 }

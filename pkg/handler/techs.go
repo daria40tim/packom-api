@@ -34,7 +34,7 @@ func (h *Handler) createTech(c *gin.Context) {
 }
 
 type getAllTechsResponse struct {
-	Data packom.TechAllCP `json:"data"`
+	Data []packom.TechAll `json:"data"`
 }
 
 func (h *Handler) getAllTechs(c *gin.Context) {
@@ -44,7 +44,7 @@ func (h *Handler) getAllTechs(c *gin.Context) {
 		return
 	}
 
-	techs, err := h.services.Tech.GetAll(O_Id /*, input*/)
+	techs, err := h.services.Tech.GetAll(O_Id)
 	if err != nil {
 		newErrorResponse(c, http.StatusInternalServerError, err.Error())
 		return
@@ -251,4 +251,43 @@ func (h *Handler) getTechDoc(c *gin.Context) {
 	c.Header("Content-Disposition", "attachment; filename="+name)
 	c.Header("Content-Type", "application/octet-stream")
 	c.FileAttachment(target, name)
+}
+
+type getTechFilterResponse struct {
+	Data packom.TechFilterData `json:"data"`
+}
+
+func (h *Handler) getTechFilterData(c *gin.Context) {
+	filters, err := h.services.Tech.GetFilterData()
+	if err != nil {
+		newErrorResponse(c, http.StatusInternalServerError, err.Error())
+		return
+	}
+
+	c.JSON(http.StatusOK, getTechFilterResponse{
+		Data: filters,
+	})
+}
+
+func (h *Handler) getFilteredTechs(c *gin.Context) {
+	O_Id, err := getOId(c)
+	if err != nil {
+		return
+	}
+
+	var input packom.TechFilterParams
+	if err := c.BindJSON(&input); err != nil {
+		newErrorResponse(c, http.StatusBadRequest, err.Error())
+		return
+	}
+
+	techs, err := h.services.Tech.GetAllTechsFiltered(O_Id, input.EDate, input.SDate, input.Clients, input.Projs, input.TZ_STS, input.CP_STS, input.Tender_STS)
+	if err != nil {
+		newErrorResponse(c, http.StatusInternalServerError, err.Error())
+		return
+	}
+
+	c.JSON(http.StatusOK, getAllTechsResponse{
+		Data: techs,
+	})
 }

@@ -1,8 +1,10 @@
 package repository
 
 import (
+	"database/sql"
 	"os"
 	"strconv"
+	"time"
 
 	"github.com/daria40tim/packom"
 	"github.com/jmoiron/sqlx"
@@ -160,16 +162,25 @@ VALUES (default,   $1,   $2,          $3,    $4) returning tender_id`
 	return Tz_Id, nil
 }
 
-func (r *TechPostgres) GetAll(O_Id int) (packom.TechAllCP, error) {
-	var res packom.TechAllCP
+func contains(s []packom.CP_srv, tz_id int) int {
+	for _, a := range s {
+		if a.Tz_id == tz_id {
+			return a.Cp_id
+		}
+	}
+	return 0
+}
+
+func (r *TechPostgres) GetAll(O_Id int) ([]packom.TechAll, error) {
 	var group_id int
+	var techs []packom.TechAll
 
 	query := `SELECT group_id
 	FROM public."Orgs" where o_id = $1`
 
 	err := r.db.Get(&group_id, query, O_Id)
 	if err != nil {
-		return res, err
+		return techs, err
 	}
 
 	var cps []packom.CP_srv
@@ -179,14 +190,12 @@ func (r *TechPostgres) GetAll(O_Id int) (packom.TechAllCP, error) {
 
 	err = r.db.Select(&cps, query, O_Id)
 	if err != nil {
-		return res, err
+		return techs, err
 	}
-
-	var techs []packom.TechAll
 
 	if group_id == 1 {
 		query = `SELECT distinct public."Techs".date,public."Techs".selected_cp,  public."Techs".task_name as task,public."Techs".end_date, public."Orgs".name as client, public."Techs".o_id, public."Techs".tz_id,  public."Techs".end_date, 
-	public."Techs".proj, public."Pack_groups".name as group, public."Pack_types".name as type, public."Pack_kinds".name as kind, 
+	public."Techs".proj, public."Pack_groups".name as group, public."Pack_types".name as type, public."Pack_kinds".name as kind, public."Techs".active, 
 	count(cp_id) over (partition by public."Techs".tz_id) as cp_count
 	FROM public."Techs" join public."Orgs" on public."Techs".o_id=public."Orgs".o_id 
 	join public."Pack_groups" on public."Pack_groups".group_id=public."Techs".group_id 
@@ -197,11 +206,10 @@ func (r *TechPostgres) GetAll(O_Id int) (packom.TechAllCP, error) {
 
 		err = r.db.Select(&techs, query, O_Id)
 
-		res.Techs = techs
 	} else {
 
 		query = `SELECT distinct public."Techs".date,public."Techs".selected_cp,  public."Techs".task_name as task,public."Techs".end_date, public."Orgs".name as client, public."Techs".o_id, public."Techs".tz_id,  public."Techs".end_date, 
-	public."Techs".proj, public."Pack_groups".name as group, public."Pack_types".name as type, public."Pack_kinds".name as kind, 
+	public."Techs".proj, public."Pack_groups".name as group, public."Pack_types".name as type, public."Pack_kinds".name as kind, public."Techs".active, 
 	count(cp_id) over (partition by public."Techs".tz_id) as cp_count
 	FROM public."Techs" join public."Orgs" on public."Techs".o_id=public."Orgs".o_id 
 	join public."Pack_groups" on public."Pack_groups".group_id=public."Techs".group_id 
@@ -212,12 +220,43 @@ func (r *TechPostgres) GetAll(O_Id int) (packom.TechAllCP, error) {
 
 		err = r.db.Select(&techs, query, O_Id)
 
-		res.Techs = techs
 	}
 
-	res.Cps = cps
+	now := time.Now()
 
-	return res, err
+	for i, v := range techs {
+		date, _ := time.Parse(time.RFC3339, v.End_date)
+		if now.Sub(date) > 0 {
+			techs[i].Tz_st = "Архив"
+		} else {
+			techs[i].Tz_st = "Активно"
+		}
+
+		if group_id == 1 {
+			techs[i].CP_st = "-"
+		} else if contains(cps, v.Tz_id) == 0 && v.Selected_cp == 0 {
+			techs[i].CP_st = "Не подано"
+		} else if contains(cps, v.Tz_id) == v.Selected_cp {
+			techs[i].CP_st = "Принято"
+		} else if contains(cps, v.Tz_id) != v.Selected_cp && v.Selected_cp != 0 {
+			techs[i].CP_st = "Отклонено"
+		} else {
+			techs[i].CP_st = "Подано"
+		}
+
+		if !v.Active {
+			techs[i].Tender_st = "Отменен"
+		} else if v.Selected_cp != 0 {
+			techs[i].Tender_st = "Принят"
+		} else if now.Sub(date) > 0 {
+			techs[i].Tender_st = "Ожидает решения"
+		} else {
+			techs[i].Tender_st = "Сбор КП"
+		}
+
+	}
+
+	return techs, err
 }
 
 func (r *TechPostgres) GetById(O_Id, tz_id int) (packom.Tech, []packom.Cost, []packom.Calendar, error) {
@@ -459,11 +498,17 @@ func (r *TechPostgres) UpdateById(id int, tech packom.Tech) (int, error) {
 	}
 
 	var Tz_Id int
-	updateTechQuery := `UPDATE public."Techs"
-	SET proj=$1, group_id=$2, kind_id=$3, type_id=$4, pay_cond_id=$5, info=$6, history=$7, task_name=$8, end_date = $9
-	WHERE tz_id=$10 returning group_id;`
-	row := r.db.QueryRow(updateTechQuery, tech.Proj, group_id, kind_id, type_id, pay_cond_id, tech.Info, tech.History, tech.Task, tech.End_date, id)
-	if err := row.Scan(&Tz_Id); err != nil {
+	query = `DELETE FROM public."Calendar"
+	WHERE tz_id = $1 returning tz_id`
+	row := r.db.QueryRow(query, id)
+	if err := row.Scan(&Tz_Id); err != nil && err != sql.ErrNoRows {
+		return 0, err
+	}
+
+	query = `DELETE FROM public."Costs"
+	WHERE tz_id = $1 returning tz_id`
+	row = r.db.QueryRow(query, id)
+	if err := row.Scan(&Tz_Id); err != nil && err != sql.ErrNoRows {
 		return 0, err
 	}
 
@@ -482,9 +527,9 @@ func (r *TechPostgres) UpdateById(id int, tech packom.Tech) (int, error) {
 
 		var cal_id int
 		createTechQuery := `INSERT INTO public."Calendar"(
-				cal_id, name_id, period, term, tz_id, cp_id, active)
-		VALUES (default,$1,      $2,      $3,   $4,    $5, $6) returning  cal_id`
-		row := r.db.QueryRow(createTechQuery, name_id, v.Period, v.Term, id, nil, true)
+			cal_id, name_id, period, term, tz_id, cp_id, active)
+			VALUES (default, $1, $2, $3, $4, $5, $6) returning  cal_id`
+		row := r.db.QueryRow(createTechQuery, name_id, v.Period, v.Term, id, nil, v.Active)
 		if err := row.Scan(&cal_id); err != nil {
 			return 0, err
 		}
@@ -518,10 +563,18 @@ func (r *TechPostgres) UpdateById(id int, tech packom.Tech) (int, error) {
 		createTechQuery := `INSERT INTO public."Costs"(
 			cost_id, metr_id, count, tz_id, cp_id, ppu, info, task_id, active)
 	VALUES (default, $1,      $2,     $3,   $4,    $5,   $6,  $7, $8) returning  cost_id`
-		row := r.db.QueryRow(createTechQuery, metr_id, v.Count, id, nil, nil, v.Info, task_id, true)
+		row := r.db.QueryRow(createTechQuery, metr_id, v.Count, id, nil, nil, v.Info, task_id, v.Active)
 		if err := row.Scan(&cost_id); err != nil {
 			return 0, err
 		}
+	}
+
+	updateTechQuery := `UPDATE public."Techs"
+	SET proj=$1, group_id=$2, kind_id=$3, type_id=$4, pay_cond_id=$5, info=$6, history=$7, task_name=$8, end_date = $9
+	WHERE tz_id=$10 returning tz_id`
+	row = r.db.QueryRow(updateTechQuery, tech.Proj, group_id, kind_id, type_id, pay_cond_id, tech.Info, tech.History, tech.Task, tech.End_date, id)
+	if err := row.Scan(&Tz_Id); err != nil {
+		return 0, err
 	}
 	return 0, nil
 }
@@ -539,4 +592,226 @@ func (r *TechPostgres) AddTechDoc(name string, o_id, tz_id int) error {
 	}
 
 	return nil
+}
+
+func (r *TechPostgres) GetFilterData() (packom.TechFilterData, error) {
+	var res packom.TechFilterData
+	var clients []packom.ClientFilter
+	var projs []packom.ProjFilter
+
+	query := `SELECT distinct proj as name, tz_id as id
+	FROM public."Techs" order by proj`
+
+	err := r.db.Select(&projs, query)
+	if err != nil {
+		return res, err
+	}
+
+	query = `SELECT distinct public."Orgs".name, public."Orgs".o_id as id
+	FROM public."Techs"
+	join public."Orgs" on public."Orgs".o_id = public."Techs".o_id
+	order by name`
+
+	err = r.db.Select(&clients, query)
+	if err != nil {
+		return res, err
+	}
+
+	res.Clients = clients
+	res.Projs = projs
+
+	return res, nil
+}
+
+func filter(source []int, value int) bool {
+	for _, v := range source {
+		if v == value {
+			return true
+		}
+	}
+	return false
+}
+
+func (r *TechPostgres) GetAllTechsFiltered(O_Id int, EDate, SDate string, Clients, Projs, TZ_STS, CP_STS, Tender_STS []int) ([]packom.TechAll, error) {
+	var group_id int
+	var techs []packom.TechAll
+	var res []packom.TechAll
+
+	query := `SELECT group_id
+	FROM public."Orgs" where o_id = $1`
+
+	err := r.db.Get(&group_id, query, O_Id)
+	if err != nil {
+		return techs, err
+	}
+
+	var cps []packom.CP_srv
+
+	query = `SELECT cp_id, date, tz_id, o_id, end_date
+	FROM public."CP" where o_id=$1`
+
+	err = r.db.Select(&cps, query, O_Id)
+	if err != nil {
+		return techs, err
+	}
+
+	if group_id == 1 {
+		query = `SELECT distinct public."Techs".date,public."Techs".selected_cp,  public."Techs".task_name as task,public."Techs".end_date, public."Orgs".name as client, public."Techs".o_id, public."Techs".tz_id,  public."Techs".end_date, 
+	public."Techs".proj, public."Pack_groups".name as group, public."Pack_types".name as type, public."Pack_kinds".name as kind, public."Techs".active, 
+	count(cp_id) over (partition by public."Techs".tz_id) as cp_count
+	FROM public."Techs" join public."Orgs" on public."Techs".o_id=public."Orgs".o_id 
+	join public."Pack_groups" on public."Pack_groups".group_id=public."Techs".group_id 
+	join public."Pack_types" on public."Pack_types".type_id=public."Techs".type_id 
+	join public."Pack_kinds" on public."Pack_kinds".kind_id=public."Techs".kind_id 
+	left join public."CP" on public."CP".tz_id=public."Techs".tz_id 
+	where public."Techs".o_id=$1`
+
+		if SDate != "" {
+			query += ` and public."Techs".date>='` + SDate + `' `
+		}
+		if EDate != "" {
+			query += ` and public."Techs".date<='` + EDate + `' `
+		}
+
+		if len(Clients) == 0 {
+			query += ` and public."Techs".o_id in (select o_id from public."Orgs") `
+		} else {
+			query += ` and public."Techs".o_id in ( ` + strconv.Itoa(Clients[0])
+			for i := 1; i < len(Clients); i++ {
+				query += `, ` + strconv.Itoa(Clients[i])
+			}
+			query += `) `
+		}
+
+		if len(Projs) == 0 {
+			query += ` and public."Techs".tz_id in (select tz_id from public."Techs") `
+		} else {
+			query += ` and public."Techs".tz_id in ( ` + strconv.Itoa(Projs[0])
+			for i := 1; i < len(Projs); i++ {
+				query += `, ` + strconv.Itoa(Projs[i])
+			}
+			query += `) `
+		}
+
+		err = r.db.Select(&techs, query, O_Id)
+
+	} else {
+
+		query = `SELECT distinct public."Techs".date,public."Techs".selected_cp,  public."Techs".task_name as task,public."Techs".end_date, public."Orgs".name as client, public."Techs".o_id, public."Techs".tz_id,  public."Techs".end_date, 
+	public."Techs".proj, public."Pack_groups".name as group, public."Pack_types".name as type, public."Pack_kinds".name as kind, public."Techs".active, 
+	count(cp_id) over (partition by public."Techs".tz_id) as cp_count
+	FROM public."Techs" join public."Orgs" on public."Techs".o_id=public."Orgs".o_id 
+	join public."Pack_groups" on public."Pack_groups".group_id=public."Techs".group_id 
+	join public."Pack_types" on public."Pack_types".type_id=public."Techs".type_id 
+	join public."Pack_kinds" on public."Pack_kinds".kind_id=public."Techs".kind_id 
+	left join public."CP" on public."CP".tz_id=public."Techs".tz_id 
+	where (not private or $1 in (select distinct f_o_id from public."Orgs_orgs" where public."Orgs_orgs".o_id = public."Techs".o_id)) `
+
+		if SDate != "" {
+			query += ` and public."Techs".date>='` + SDate + `' `
+		}
+		if EDate != "" {
+			query += ` and public."Techs".date<='` + EDate + `' `
+		}
+
+		if len(Clients) == 0 {
+			query += ` and public."Techs".o_id in (select o_id from public."Orgs") `
+		} else {
+			query += ` and public."Techs".o_id in ( ` + strconv.Itoa(Clients[0])
+			for i := 1; i < len(Clients); i++ {
+				query += `, ` + strconv.Itoa(Clients[i])
+			}
+			query += `) `
+		}
+
+		if len(Projs) == 0 {
+			query += ` and public."Techs".tz_id in (select tz_id from public."Techs") `
+		} else {
+			query += ` and public."Techs".tz_id in ( ` + strconv.Itoa(Projs[0])
+			for i := 1; i < len(Projs); i++ {
+				query += `, ` + strconv.Itoa(Projs[i])
+			}
+			query += `) `
+		}
+
+		err = r.db.Select(&techs, query, O_Id)
+
+	}
+
+	now := time.Now()
+
+	for i, v := range techs {
+		date, _ := time.Parse(time.RFC3339, v.End_date)
+		if now.Sub(date) > 0 {
+			techs[i].Tz_st = "Архив"
+			techs[i].Tz_st_id = 2
+		} else {
+			techs[i].Tz_st = "Активно"
+			techs[i].Tz_st_id = 1
+		}
+
+		if group_id == 1 {
+			techs[i].CP_st = "-"
+			techs[i].CP_st_id = 5
+		} else if contains(cps, v.Tz_id) == 0 && v.Selected_cp == 0 {
+			techs[i].CP_st = "Не подано"
+			techs[i].CP_st_id = 1
+		} else if contains(cps, v.Tz_id) == v.Selected_cp {
+			techs[i].CP_st = "Принято"
+			techs[i].CP_st_id = 4
+		} else if contains(cps, v.Tz_id) != v.Selected_cp && v.Selected_cp != 0 {
+			techs[i].CP_st = "Отклонено"
+			techs[i].CP_st_id = 3
+		} else {
+			techs[i].CP_st = "Подано"
+			techs[i].CP_st_id = 2
+		}
+
+		if !v.Active {
+			techs[i].Tender_st = "Отменен"
+			techs[i].Tender_st_id = 4
+		} else if v.Selected_cp != 0 {
+			techs[i].Tender_st = "Принят"
+			techs[i].Tender_st_id = 3
+		} else if now.Sub(date) > 0 {
+			techs[i].Tender_st = "Ожидает решения"
+			techs[i].Tender_st_id = 2
+		} else {
+			techs[i].Tender_st = "Сбор КП"
+			techs[i].Tender_st_id = 1
+		}
+	}
+
+	tz := []int{1, 2}
+	cp := []int{1, 2, 3, 4, 5}
+	tender := []int{1, 2, 3, 4}
+	var t []int
+	var ten []int
+	var c []int
+
+	if len(TZ_STS) == 0 {
+		t = tz[:]
+	} else {
+		t = TZ_STS[:]
+	}
+
+	if len(Tender_STS) == 0 {
+		ten = tender[:]
+	} else {
+		ten = Tender_STS[:]
+	}
+
+	if len(CP_STS) == 0 {
+		c = cp[:]
+	} else {
+		c = CP_STS[:]
+	}
+
+	for _, v := range techs {
+		if filter(t, v.Tz_st_id) && filter(ten, v.Tender_st_id) && filter(c, v.CP_st_id) {
+			res = append(res, v)
+		}
+	}
+
+	return res, err
 }

@@ -21,6 +21,8 @@ type TenderAll struct {
 	Cp_count    string `json:"cp_count" db:"cp_count"`
 	Tender_sum  int    `json:"tender_sum" db:"tender_sum"`
 	Selected_cp int    `json:"selected_cp" db:"selected_cp"`
+	Tender_st   string `json:"tender_st"`
+	Active      bool   `json:"active" db:"active"`
 }
 
 type TenderById struct {

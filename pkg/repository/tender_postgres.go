@@ -2,6 +2,7 @@ package repository
 
 import (
 	"fmt"
+	"strconv"
 	"time"
 
 	"github.com/daria40tim/packom"
@@ -123,7 +124,7 @@ func (r *TenderPostgres) GetById(id int) (packom.TenderById, error) {
 	res.Term = term
 
 	var tz_cal []string
-	query = `SELECT public."Task_names".name
+	query = `SELECT distinct public."Task_names".name
 	FROM public."Calendar"
 	join public."Task_names" on public."Task_names".name_id = public."Calendar".name_id
 	where tz_id = $1 and active`
@@ -193,7 +194,7 @@ func (r *TenderPostgres) GetById(id int) (packom.TenderById, error) {
 
 		cps[i].Costs = costs
 
-		query = `SELECT  period
+		query = `SELECT  cp_period
 		FROM public."Calendar"
 		where cp_id = $1 and active`
 
@@ -258,4 +259,127 @@ func (r *TenderPostgres) UpdateById(input packom.Tender) (int, error) {
 		}
 		return tender_id, nil
 	}
+}
+
+func tender_filter(source []int, value int) bool {
+	for _, v := range source {
+		if v == value {
+			return true
+		}
+	}
+	return false
+}
+
+func (r *TenderPostgres) GetAllTendersFiltered(O_Id int, EDate, SDate string, Projs, TZ_Ids, Tender_STS []int) ([]packom.TenderAll, error) {
+	var techs []packom.TenderAll
+	var res []packom.TenderAll
+	query := `SELECT tender_id, public."Techs".end_date as date, public."Techs".selected_cp, public."Techs".proj , public."Tenders".tz_id, public."Techs".tz_st, public."Techs".task_name as task,
+	public."Pack_groups".name as group, public."Pack_types".name as type, public."Pack_kinds".name as kind, public."Techs".active
+	   FROM public."Tenders"
+	   join public."Techs" on public."Tenders".tz_id = public."Techs".tz_id
+	   join public."Pack_groups" on public."Pack_groups".group_id=public."Techs".group_id 
+	   join public."Pack_types" on public."Pack_types".type_id=public."Techs".type_id 
+	   join public."Pack_kinds" on public."Pack_kinds".kind_id=public."Techs".kind_id 
+	   where public."Techs".o_id = $1`
+
+	if SDate != "" {
+		query += ` and public."Techs".end_date>='` + SDate + `' `
+	}
+	if EDate != "" {
+		query += ` and public."Techs".end_date<='` + EDate + `' `
+	}
+
+	if len(Projs) == 0 {
+		query += ` and public."Tenders".tender_id in (select tender_id from public."Tenders") `
+	} else {
+		query += ` and public."Tenders".tender_id in ( ` + strconv.Itoa(Projs[0])
+		for i := 1; i < len(Projs); i++ {
+			query += `, ` + strconv.Itoa(Projs[i])
+		}
+		query += `) `
+	}
+
+	if len(TZ_Ids) == 0 {
+		query += ` and public."Tenders".tz_id in (select tz_id from public."Tenders") `
+	} else {
+		query += ` and public."Tenders".tz_id in ( ` + strconv.Itoa(TZ_Ids[0])
+		for i := 1; i < len(TZ_Ids); i++ {
+			query += `, ` + strconv.Itoa(TZ_Ids[i])
+		}
+		query += `) `
+	}
+
+	err := r.db.Select(&techs, query, O_Id)
+	if err != nil {
+		return nil, err
+	}
+
+	now := time.Now()
+
+	for i, v := range techs {
+		date, err := time.Parse(time.RFC3339, v.Date)
+		if err != nil {
+			return nil, err
+		}
+		if !v.Active {
+			techs[i].Tender_st = "Отменен"
+			techs[i].Tender_st_id = 4
+		} else if v.Active && v.Selected_cp != 0 {
+			techs[i].Tender_st = "Архив"
+			techs[i].Tender_st_id = 3
+		} else if now.Sub(date) > 0 {
+			techs[i].Tender_st = "Ожидает решения"
+			techs[i].Tender_st_id = 2
+		} else {
+			techs[i].Tender_st = "Сбор КП"
+			techs[i].Tender_st_id = 1
+		}
+	}
+
+	cp := []int{1, 2, 3, 4}
+	var c []int
+
+	if len(Tender_STS) == 0 {
+		c = cp[:]
+	} else {
+		c = Tender_STS[:]
+	}
+
+	for _, v := range techs {
+		if tender_filter(c, v.Tender_st_id) {
+			res = append(res, v)
+		}
+	}
+
+	return res, err
+}
+
+func (r *TenderPostgres) GetTenderFilterData() (packom.TenderFilterData, error) {
+	var res packom.TenderFilterData
+	var projs []packom.ProFilter
+	var tz_ids []packom.TZIdsFilter
+
+	query := `SELECT distinct proj as name, tender_id as id
+	FROM public."Tenders" 
+	join public."Techs" on public."Techs".tz_id = public."Tenders".tz_id
+	order by proj`
+
+	err := r.db.Select(&projs, query)
+	if err != nil {
+		return res, err
+	}
+
+	query = `SELECT distinct tz_id as id, tz_id as name
+	FROM public."Tenders"
+	order by tz_id`
+
+	err = r.db.Select(&tz_ids, query)
+	if err != nil {
+		return res, err
+	}
+
+	res.Projs = projs
+	res.Tz_ids = tz_ids
+
+	return res, nil
 }

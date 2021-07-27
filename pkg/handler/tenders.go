@@ -112,3 +112,42 @@ func (h *Handler) updateTenderById(c *gin.Context) {
 
 	c.JSON(http.StatusOK, tender)
 }
+
+type getTenderFilterResponse struct {
+	Data packom.TenderFilterData `json:"data"`
+}
+
+func (h *Handler) getTenderFilterData(c *gin.Context) {
+	filters, err := h.services.Tender.GetTenderFilterData()
+	if err != nil {
+		newErrorResponse(c, http.StatusInternalServerError, err.Error())
+		return
+	}
+
+	c.JSON(http.StatusOK, getTenderFilterResponse{
+		Data: filters,
+	})
+}
+
+func (h *Handler) getFilteredTenders(c *gin.Context) {
+	O_Id, err := getOId(c)
+	if err != nil {
+		return
+	}
+
+	var input packom.TenderFilterParams
+	if err := c.BindJSON(&input); err != nil {
+		newErrorResponse(c, http.StatusBadRequest, err.Error())
+		return
+	}
+
+	techs, err := h.services.Tender.GetAllTendersFiltered(O_Id, input.EDate, input.SDate, input.Projs, input.TZ_Ids, input.Tender_STS)
+	if err != nil {
+		newErrorResponse(c, http.StatusInternalServerError, err.Error())
+		return
+	}
+
+	c.JSON(http.StatusOK, getAllTendersResponse{
+		Data: techs,
+	})
+}

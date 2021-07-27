@@ -97,6 +97,9 @@ func (h *Handler) InitRoutes() *gin.Engine {
 			cps.POST("/delete_cst", h.cpDeleteCst)
 			cps.POST("/docs/:id", h.getCpDocsById)
 			cps.GET("/doc/:name/:id", h.getCpDoc)
+			cps.GET("/filter", h.getCpFilterData)
+			cps.GET("/payconds/", h.getSelectPayConds)
+			cps.POST("/job/", h.getFilteredCPs)
 		}
 		tenders := api.Group("/tenders")
 		{
@@ -105,6 +108,8 @@ func (h *Handler) InitRoutes() *gin.Engine {
 			tenders.GET("/:id", h.getTenderById)
 			tenders.PUT("/decide", h.updateTenderById)
 			tenders.GET("/min", h.getMinandMax)
+			tenders.GET("/filter", h.getTenderFilterData)
+			tenders.POST("/job/", h.getFilteredTenders)
 		}
 	}
 

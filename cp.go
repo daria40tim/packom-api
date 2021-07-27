@@ -66,6 +66,7 @@ type CPAll struct {
 	Cp_id       string `json:"cp_id" db:"cp_id"`
 	Date        string `json:"date" db:"date"`
 	Cp_st       string `json:"cp_st" db:"cp_st"`
+	Cp_st_id    int    `json:"cp_st_id"`
 	Tz_id       int    `json:"tz_id" db:"tz_id"`
 	Proj        string `json:"proj" db:"proj"`
 	Client      string `json:"client" db:"client"`
@@ -87,14 +88,44 @@ type CP_srv struct {
 }
 
 type CPIns struct {
-	Date      string     `json:"date" db:"date"`
-	Tz_id     int        `json:"tz_id" db:"tz_id"`
-	Proj      string     `json:"proj" db:"proj"`
-	Pay_cond  string     `json:"pay_cond" db:"pay_cond"`
-	End_date  string     `json:"end_date" db:"end_date"`
-	Info      string     `json:"info" db:"info"`
-	History   string     `json:"history" db:"history"`
-	Costs     []Cost     `json:"cst"`
-	Calendars []Calendar `json:"cal"`
-	Docs      []string   `json:"docs"`
+	Date      string          `json:"date" db:"date"`
+	Tz_id     int             `json:"tz_id" db:"tz_id"`
+	Proj      string          `json:"proj" db:"proj"`
+	Pay_cond  string          `json:"pay_cond" db:"pay_cond"`
+	End_date  string          `json:"end_date" db:"end_date"`
+	Info      string          `json:"info" db:"info"`
+	History   string          `json:"history" db:"history"`
+	Costs     []Cost          `json:"cst"`
+	Calendars []InputCalendar `json:"cal"`
+	Docs      []string        `json:"docs"`
+}
+
+type CPFilterData struct {
+	Tz_ids []TZIdFilter  `json:"tz_ids"`
+	Projs  []ProjsFilter `json:"projs"`
+	Orgs   []OrgsFilter  `json:"orgs"`
+}
+
+type TZIdFilter struct {
+	Name string `json:"name"`
+	Id   int    `json:"id"`
+}
+
+type OrgsFilter struct {
+	Name string `json:"name"`
+	Id   int    `json:"id"`
+}
+
+type ProjsFilter struct {
+	Name string `json:"name"`
+	Id   int    `json:"id"`
+}
+
+type CPFilterParams struct {
+	EDate  string `json:"e_date"`
+	SDate  string `json:"s_date"`
+	Orgs   []int  `json:"orgs"`
+	Projs  []int  `json:"projs"`
+	TZ_Ids []int  `json:"tz_ids"`
+	CP_STS []int  `json:"cp_sts"`
 }

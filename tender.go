@@ -9,20 +9,21 @@ type Tender struct {
 }
 
 type TenderAll struct {
-	Tender_id   int    `json:"tender_id" db:"tender_id"`
-	Tz_id       int    `json:"tz_id" db:"tz_id"`
-	Tz_st       int    `json:"tz_st" db:"tz_st"`
-	Date        string `json:"date" db:"date"`
-	Proj        string `json:"proj" db:"proj"`
-	Group       string `json:"group" db:"group"`
-	Type        string `json:"type" db:"type"`
-	Kind        string `json:"kind" db:"kind"`
-	Task        string `json:"task" db:"task"`
-	Cp_count    string `json:"cp_count" db:"cp_count"`
-	Tender_sum  int    `json:"tender_sum" db:"tender_sum"`
-	Selected_cp int    `json:"selected_cp" db:"selected_cp"`
-	Tender_st   string `json:"tender_st"`
-	Active      bool   `json:"active" db:"active"`
+	Tender_id    int    `json:"tender_id" db:"tender_id"`
+	Tz_id        int    `json:"tz_id" db:"tz_id"`
+	Tz_st        int    `json:"tz_st" db:"tz_st"`
+	Date         string `json:"date" db:"date"`
+	Proj         string `json:"proj" db:"proj"`
+	Group        string `json:"group" db:"group"`
+	Type         string `json:"type" db:"type"`
+	Kind         string `json:"kind" db:"kind"`
+	Task         string `json:"task" db:"task"`
+	Cp_count     string `json:"cp_count" db:"cp_count"`
+	Tender_sum   int    `json:"tender_sum" db:"tender_sum"`
+	Selected_cp  int    `json:"selected_cp" db:"selected_cp"`
+	Tender_st    string `json:"tender_st"`
+	Tender_st_id int    `json:"tender_st_id"`
+	Active       bool   `json:"active" db:"active"`
 }
 
 type TenderById struct {
@@ -62,4 +63,27 @@ type TenderCP struct {
 	Pay_cond  string       `json:"pay_cond" db:"pay_cond"`
 	Calendars []int        `json:"calendars"`
 	Costs     []TenderCost `json:"costs"`
+}
+
+type TenderFilterData struct {
+	Tz_ids []TZIdsFilter `json:"tz_ids"`
+	Projs  []ProFilter   `json:"projs"`
+}
+
+type TZIdsFilter struct {
+	Name string `json:"name"`
+	Id   int    `json:"id"`
+}
+
+type ProFilter struct {
+	Name string `json:"name"`
+	Id   int    `json:"id"`
+}
+
+type TenderFilterParams struct {
+	EDate      string `json:"e_date"`
+	SDate      string `json:"s_date"`
+	Projs      []int  `json:"projs"`
+	TZ_Ids     []int  `json:"tz_ids"`
+	Tender_STS []int  `json:"tender_sts"`
 }

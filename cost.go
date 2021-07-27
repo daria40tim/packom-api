@@ -7,7 +7,7 @@ type Cost struct {
 	Count   int    `json:"count" db:"count"`
 	Tz_id   int    `json:"tz_id" db:"tz_id"`
 	Cp_id   int    `json:"cp_id" db:"cp_id"`
-	PPU     string `json:"ppu" db:"ppu"`
+	PPU     int    `json:"ppu" db:"ppu"`
 	Info    string `json:"info" db:"info"`
 	Active  bool   `json:"active" db:"active"`
 }

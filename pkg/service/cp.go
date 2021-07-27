@@ -40,3 +40,15 @@ func (s *CPService) DeleteCst(id int) (int, error) {
 func (s *CPService) AddCPDoc(name string, o_id, cp_id int) error {
 	return s.repo.AddCPDoc(name, o_id, cp_id)
 }
+
+func (s *CPService) GetCPFilterData() (packom.CPFilterData, error) {
+	return s.repo.GetCPFilterData()
+}
+
+func (s *CPService) SelectAllPayConds() (packom.Countries, error) {
+	return s.repo.SelectAllPayConds()
+}
+
+func (s *CPService) GetAllCPsFiltered(O_Id int, EDate, SDate string, Orgs, Projs, TZ_Ids, CP_STS []int) ([]packom.CPAll, error) {
+	return s.repo.GetAllCPsFiltered(O_Id, EDate, SDate, Orgs, Projs, TZ_Ids, CP_STS)
+}

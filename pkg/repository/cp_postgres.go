@@ -1,6 +1,7 @@
 package repository
 
 import (
+	"database/sql"
 	"os"
 	"strconv"
 
@@ -88,9 +89,9 @@ VALUES (default, $1,  $2,   $3,     $4,  $5,    $6,         $7,       $8,   $9) 
 
 		var cal_id int
 		createTechQuery := `INSERT INTO public."Calendar"(
-				cal_id, name_id, period, term, tz_id, cp_id, active)
-		VALUES (default,$1,      $2,      $3,   $4,    $5, $6) returning  cal_id`
-		row := r.db.QueryRow(createTechQuery, name_id, v.Period, v.Term, nil, CP_Id, true)
+				cal_id, name_id, period, term, tz_id, cp_id, active, cp_period)
+		VALUES (default,$1,      $2,      $3,   $4,    $5,   $6,     $7) returning  cal_id`
+		row := r.db.QueryRow(createTechQuery, name_id, v.Period, v.Term, cp.Tz_id, CP_Id, true, v.CP_Period)
 		if err := row.Scan(&cal_id); err != nil {
 			return 0, err
 		}
@@ -221,17 +222,17 @@ func (r *CPPostgres) GetById(O_Id, cp_id int) (packom.CPId, error) {
 		return cp, err
 	}
 
-	query = `with a as (SELECT cal_id, name_id, period, term, tz_id, cp_id, active
-		FROM public."Calendar" where tz_id = $1 and active)
+	query = `with a as (SELECT cal_id, name_id, period, term, tz_id, cp_id, active, cp_period
+		FROM public."Calendar" where cp_id = $1 and active)
 		
-	SELECT public."Calendar".cal_id, public."Calendar".period, public."Calendar".term, a.tz_id , a.period as tz_period, a.active,
+	SELECT public."Calendar".cal_id, public."Calendar".period, public."Calendar".term, a.tz_id , a.period as tz_period, a.active, a.cp_period,
 	a.term as tz_term, public."Calendar".cp_id, public."Task_names".name as name
 		FROM public."Calendar" 
 		right join a on public."Calendar".name_id =  a.name_id
 		join public."Task_names" on public."Calendar".name_id = public."Task_names".name_id
 		where public."Calendar".cp_id = $2 and public."Calendar".active`
 
-	err = r.db.Select(&calendars, query, cp.Tz_id, cp_id)
+	err = r.db.Select(&calendars, query, cp_id, cp_id)
 	if err != nil {
 		return cp, err
 	}
@@ -276,6 +277,7 @@ func (r *CPPostgres) GetById(O_Id, cp_id int) (packom.CPId, error) {
 
 func (r *CPPostgres) UpdateById(cp_id int, cp packom.CPIns) (int, error) {
 	var pay_cond_id int
+	var a int
 	query := `select pay_cond_id from public."Pay_conds" where name=$1`
 	err := r.db.Get(&pay_cond_id, query, cp.Pay_cond)
 	if err != nil {
@@ -295,6 +297,20 @@ func (r *CPPostgres) UpdateById(cp_id int, cp packom.CPIns) (int, error) {
 		return 0, err
 	}
 
+	query = `DELETE FROM public."Calendar"
+	WHERE cp_id = $1`
+	row = r.db.QueryRow(query, cp_id)
+	if err = row.Scan(&a); err != nil && err != sql.ErrNoRows {
+		return 0, err
+	}
+
+	query = `DELETE FROM public."Costs"
+	WHERE cp_id = $1`
+	row = r.db.QueryRow(query, cp_id)
+	if err = row.Scan(&a); err != nil && err != sql.ErrNoRows {
+		return 0, err
+	}
+
 	for _, v := range cp.Calendars {
 
 		var name_id int
@@ -310,9 +326,9 @@ func (r *CPPostgres) UpdateById(cp_id int, cp packom.CPIns) (int, error) {
 
 		var cal_id int
 		createTechQuery := `INSERT INTO public."Calendar"(
-				cal_id, name_id, period, term, tz_id, cp_id, active)
-		VALUES (default,$1,      $2,      $3,   $4,    $5, $6) returning  cal_id`
-		row := r.db.QueryRow(createTechQuery, name_id, v.Period, v.Term, nil, CP_Id, true)
+				cal_id, name_id, period, term, tz_id, cp_id, active, cp_period)
+		VALUES (default,$1,      $2,      $3,   $4,    $5,   $6,     $7) returning  cal_id`
+		row := r.db.QueryRow(createTechQuery, name_id, v.Period, v.Term, cp.Tz_id, CP_Id, true, v.CP_Period)
 		if err := row.Scan(&cal_id); err != nil {
 			return 0, err
 		}
@@ -383,4 +399,157 @@ func (r *CPPostgres) AddCPDoc(name string, o_id, cp_id int) error {
 	}
 
 	return nil
+}
+
+func (r *CPPostgres) GetCPFilterData() (packom.CPFilterData, error) {
+	var res packom.CPFilterData
+	var clients []packom.OrgsFilter
+	var projs []packom.ProjsFilter
+	var tz_ids []packom.TZIdFilter
+
+	query := `SELECT distinct proj as name, cp_id as id
+	FROM public."CP" order by proj`
+
+	err := r.db.Select(&projs, query)
+	if err != nil {
+		return res, err
+	}
+
+	query = `SELECT distinct public."Orgs".name, public."Orgs".o_id as id
+	FROM public."CP"
+	join public."Orgs" on public."Orgs".o_id = public."CP".o_id
+	order by name`
+
+	err = r.db.Select(&clients, query)
+	if err != nil {
+		return res, err
+	}
+
+	query = `SELECT distinct tz_id as id, tz_id as name
+	FROM public."CP"
+	order by tz_id`
+
+	err = r.db.Select(&tz_ids, query)
+	if err != nil {
+		return res, err
+	}
+
+	res.Orgs = clients
+	res.Projs = projs
+	res.Tz_ids = tz_ids
+
+	return res, nil
+}
+
+func (r *CPPostgres) SelectAllPayConds() (packom.Countries, error) {
+	var countries []string
+	var res packom.Countries
+
+	query := `SELECT name
+	FROM public."Pay_conds"`
+
+	err := r.db.Select(&countries, query)
+	if err != nil {
+		return res, err
+	}
+
+	res.Countries = countries
+
+	return res, nil
+}
+
+func cp_filter(source []int, value int) bool {
+	for _, v := range source {
+		if v == value {
+			return true
+		}
+	}
+	return false
+}
+
+func (r *CPPostgres) GetAllCPsFiltered(O_Id int, EDate, SDate string, Orgs, Projs, TZ_Ids, CP_STS []int) ([]packom.CPAll, error) {
+	var techs []packom.CPAll
+	var res []packom.CPAll
+
+	query := `SELECT cp_id, public."CP".date, public."CP".tz_id, public."CP".proj, public."CP".o_id, public."Orgs".name as client, public."Pack_groups".name as group, 
+	public."Pack_types".name as type, public."Pack_kinds".name as kind, public."Techs".task_name as task_name, public."Techs".active, 
+	public."Techs".selected_cp 
+	FROM public."CP" join public."Orgs" on public."Orgs".o_id=public."CP".o_id 
+	join public."Techs" on public."Techs".tz_id=public."CP".tz_id
+	join public."Pack_groups" on public."Pack_groups".group_id=public."Techs".group_id
+	join public."Pack_kinds" on public."Pack_kinds".kind_id=public."Techs".kind_id
+	join public."Pack_types" on public."Pack_types".type_id=public."Techs".type_id
+	where public."CP".o_id =$1`
+
+	if SDate != "" {
+		query += ` and public."CP".date>='` + SDate + `' `
+	}
+	if EDate != "" {
+		query += ` and public."CP".date<='` + EDate + `' `
+	}
+
+	if len(Orgs) == 0 {
+		query += ` and public."CP".o_id in (select o_id from public."Orgs") `
+	} else {
+		query += ` and public."CP".o_id in ( ` + strconv.Itoa(Orgs[0])
+		for i := 1; i < len(Orgs); i++ {
+			query += `, ` + strconv.Itoa(Orgs[i])
+		}
+		query += `) `
+	}
+
+	if len(Projs) == 0 {
+		query += ` and public."CP".cp_id in (select cp_id from public."CP") `
+	} else {
+		query += ` and public."CP".cp_id in ( ` + strconv.Itoa(Projs[0])
+		for i := 1; i < len(Projs); i++ {
+			query += `, ` + strconv.Itoa(Projs[i])
+		}
+		query += `) `
+	}
+
+	if len(TZ_Ids) == 0 {
+		query += ` and public."CP".tz_id in (select tz_id from public."CP") `
+	} else {
+		query += ` and public."CP".tz_id in ( ` + strconv.Itoa(TZ_Ids[0])
+		for i := 1; i < len(TZ_Ids); i++ {
+			query += `, ` + strconv.Itoa(TZ_Ids[i])
+		}
+		query += `) `
+	}
+
+	err := r.db.Select(&techs, query, O_Id)
+
+	for i, v := range techs {
+		if v.Selected_cp == v.Cp_id {
+			techs[i].Cp_st = "Принято"
+			techs[i].Cp_st_id = 4
+		} else if v.Selected_cp != v.Cp_id && v.Selected_cp != "0" {
+			techs[i].Cp_st = "Отклонено"
+			techs[i].Cp_st_id = 3
+		} else if v.Selected_cp == "0" {
+			techs[i].Cp_st = "Активно"
+			techs[i].Cp_st_id = 1
+		} else {
+			techs[i].Cp_st = "Архив"
+			techs[i].Cp_st_id = 2
+		}
+	}
+
+	cp := []int{1, 2, 3, 4}
+	var c []int
+
+	if len(CP_STS) == 0 {
+		c = cp[:]
+	} else {
+		c = CP_STS[:]
+	}
+
+	for _, v := range techs {
+		if cp_filter(c, v.Cp_st_id) {
+			res = append(res, v)
+		}
+	}
+
+	return res, err
 }

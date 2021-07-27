@@ -193,11 +193,6 @@ func (h *Handler) getCpDocsById(c *gin.Context) {
 }
 
 func (h *Handler) getCpDoc(c *gin.Context) {
-	/*O_Id, err := getOId(c)
-	if err != nil {
-		newErrorResponse(c, http.StatusBadRequest, err.Error())
-		return
-	}*/
 	name := c.Param("name")
 
 	id, err := strconv.Atoi(c.Param("id"))
@@ -218,4 +213,61 @@ func (h *Handler) getCpDoc(c *gin.Context) {
 	c.Header("Content-Disposition", "attachment; filename="+name)
 	c.Header("Content-Type", "application/octet-stream")
 	c.FileAttachment(target, name)
+}
+
+type getCPFilterResponse struct {
+	Data packom.CPFilterData `json:"data"`
+}
+
+func (h *Handler) getCpFilterData(c *gin.Context) {
+	filters, err := h.services.CP.GetCPFilterData()
+	if err != nil {
+		newErrorResponse(c, http.StatusInternalServerError, err.Error())
+		return
+	}
+
+	c.JSON(http.StatusOK, getCPFilterResponse{
+		Data: filters,
+	})
+}
+
+type getCountryResponse struct {
+	Data packom.Countries `json:"data"`
+}
+
+func (h *Handler) getSelectPayConds(c *gin.Context) {
+
+	data, err := h.services.CP.SelectAllPayConds()
+	if err != nil {
+		newErrorResponse(c, http.StatusInternalServerError, err.Error())
+		return
+	}
+
+	c.JSON(http.StatusOK, getCountryResponse{
+		Data: data,
+	})
+
+}
+
+func (h *Handler) getFilteredCPs(c *gin.Context) {
+	O_Id, err := getOId(c)
+	if err != nil {
+		return
+	}
+
+	var input packom.CPFilterParams
+	if err := c.BindJSON(&input); err != nil {
+		newErrorResponse(c, http.StatusBadRequest, err.Error())
+		return
+	}
+
+	techs, err := h.services.CP.GetAllCPsFiltered(O_Id, input.EDate, input.SDate, input.Orgs, input.Projs, input.TZ_Ids, input.CP_STS)
+	if err != nil {
+		newErrorResponse(c, http.StatusInternalServerError, err.Error())
+		return
+	}
+
+	c.JSON(http.StatusOK, getAllCPsResponse{
+		Data: techs,
+	})
 }

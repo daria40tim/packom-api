@@ -32,3 +32,11 @@ func (s *TenderService) GetFullCosts(id int) ([]packom.FullCost, error) {
 func (s *TenderService) UpdateById(input packom.Tender) (int, error) {
 	return s.repo.UpdateById(input)
 }
+
+func (s *TenderService) GetTenderFilterData() (packom.TenderFilterData, error) {
+	return s.repo.GetTenderFilterData()
+}
+
+func (s *TenderService) GetAllTendersFiltered(O_Id int, EDate, SDate string, Projs, TZ_Ids, Tender_STS []int) ([]packom.TenderAll, error) {
+	return s.repo.GetAllTendersFiltered(O_Id, EDate, SDate, Projs, TZ_Ids, Tender_STS)
+}
